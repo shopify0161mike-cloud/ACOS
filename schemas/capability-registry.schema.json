@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://acos.dogvision.internal/schemas/capability-registry.schema.json",
+  "title": "ACOS Capability Registry",
+  "description": "Canonical machine-readable contract for enterprise capabilities defined by Architecture Chapter 1.1.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["registry_version", "architecture_chapter", "status", "capabilities"],
+  "properties": {
+    "registry_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "architecture_chapter": {"const": "1.1"},
+    "status": {"enum": ["draft", "approved", "canonical", "deprecated"]},
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/capability"}
+    }
+  },
+  "$defs": {
+    "identifier": {"type": "string", "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+){2,5}$"},
+    "snakeName": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+    "eventName": {"type": "string", "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)+\\.v[1-9][0-9]*$"},
+    "nonEmptyString": {"type": "string", "minLength": 1},
+    "stringSet": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/nonEmptyString"}
+    },
+    "recoveryObjectives": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rto_minutes", "rpo_minutes"],
+      "properties": {
+        "rto_minutes": {"type": "integer", "minimum": 0, "maximum": 525600},
+        "rpo_minutes": {"type": "integer", "minimum": 0, "maximum": 525600}
+      }
+    },
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "name", "domain_group", "domain", "purpose", "business_owner",
+        "technical_owner", "criticality", "maturity", "lifecycle_state",
+        "authority_level", "security_classification", "ai_enabled", "dependencies",
+        "policies", "events_emitted", "events_consumed", "metrics", "data_ownership",
+        "recovery_objectives", "acceptance_criteria", "implementation_refs"
+      ],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "name": {"type": "string", "minLength": 3, "maxLength": 120},
+        "domain_group": {"enum": ["commerce", "intelligence", "governance", "platform"]},
+        "domain": {"$ref": "#/$defs/snakeName"},
+        "purpose": {"type": "string", "minLength": 20, "maxLength": 500},
+        "business_owner": {"$ref": "#/$defs/nonEmptyString"},
+        "technical_owner": {"$ref": "#/$defs/nonEmptyString"},
+        "criticality": {"enum": ["C1", "C2", "C3", "C4"]},
+        "maturity": {"enum": ["M0", "M1", "M2", "M3", "M4", "M5"]},
+        "lifecycle_state": {"enum": ["proposed", "approved", "planned", "implementing", "operational", "improving", "deprecated", "retired"]},
+        "authority_level": {"enum": ["observe", "analyze", "recommend", "execute_within_authority", "coordinate_autonomy", "human_exclusive"]},
+        "security_classification": {"enum": ["public", "internal", "confidential", "restricted"]},
+        "ai_enabled": {"type": "boolean"},
+        "dependencies": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/identifier"}
+        },
+        "policies": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^POL-[A-Z0-9]+(?:-[A-Z0-9]+){1,4}$"}
+        },
+        "events_emitted": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/eventName"}
+        },
+        "events_consumed": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/eventName"}
+        },
+        "metrics": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/snakeName"}
+        },
+        "data_ownership": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/snakeName"}
+        },
+        "recovery_objectives": {"$ref": "#/$defs/recoveryObjectives"},
+        "acceptance_criteria": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 10}
+        },
+        "implementation_refs": {"$ref": "#/$defs/stringSet"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"ai_enabled": {"const": true}}, "required": ["ai_enabled"]},
+          "then": {"properties": {"policies": {"minItems": 1}}}
+        },
+        {
+          "if": {"properties": {"criticality": {"const": "C4"}}, "required": ["criticality"]},
+          "then": {
+            "properties": {
+              "recovery_objectives": {
+                "properties": {
+                  "rto_minutes": {"maximum": 60},
+                  "rpo_minutes": {"maximum": 5}
+                }
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "properties": {
+              "id": {"const": ""}
+            }
+          }
+        }
+      ]
+    }
+  }
+}
