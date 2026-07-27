@@ -1,0 +1,126 @@
+%% ACOS Capability Dependency Graph
+%% Architecture Chapter: 1.1 Enterprise Capability Architecture
+%% Source of truth: config/capabilities/registry.yaml
+%% Status: canonical
+%%
+%% Arrow direction: capability --> dependency.
+%% A solid edge means the source capability cannot satisfy its contract without
+%% the target capability. This graph is intended for architecture review,
+%% impact analysis, ownership review and circular-dependency detection.
+
+flowchart LR
+
+  classDef commerce fill:#e8f3ff,stroke:#1d4ed8,stroke-width:1.5px,color:#0f172a;
+  classDef intelligence fill:#f3e8ff,stroke:#7e22ce,stroke-width:1.5px,color:#0f172a;
+  classDef governance fill:#fff1f2,stroke:#be123c,stroke-width:1.5px,color:#0f172a;
+  classDef platform fill:#ecfdf5,stroke:#047857,stroke-width:1.5px,color:#0f172a;
+  classDef root fill:#f8fafc,stroke:#0f172a,stroke-width:2px,color:#0f172a;
+
+  subgraph COM["Commerce"]
+    direction TB
+    COM_PRO_001["CAP-COM-PRO-001\nProduct Discovery"]:::commerce
+    COM_PRO_002["CAP-COM-PRO-002\nProduct Qualification"]:::commerce
+    COM_SUP_001["CAP-COM-SUP-001\nSupplier Discovery"]:::commerce
+    COM_SUP_002["CAP-COM-SUP-002\nSupplier Qualification"]:::commerce
+    COM_FIN_001["CAP-COM-FIN-001\nUnit Economics Modeling"]:::commerce
+    COM_BRA_001["CAP-COM-BRA-001\nBrand Identity Management"]:::commerce
+    COM_MKT_001["CAP-COM-MKT-001\nCampaign Planning"]:::commerce
+    COM_ORD_001["CAP-COM-ORD-001\nOrder Lifecycle Management"]:::commerce
+    COM_FUL_001["CAP-COM-FUL-001\nFulfillment Coordination"]:::commerce
+  end
+
+  subgraph INT["Intelligence"]
+    direction TB
+    INT_MKT_001["CAP-INT-MKT-001\nMarket Intelligence"]:::intelligence
+    INT_EXE_001["CAP-INT-EXE-001\nEnterprise Planning and Coordination"]:::intelligence
+  end
+
+  subgraph GOV["Governance"]
+    direction TB
+    GOV_PLY_001["CAP-GOV-PLY-001\nPolicy Evaluation"]:::governance
+    GOV_APR_001["CAP-GOV-APR-001\nProduct Acceptance Approval"]:::governance
+    GOV_RSK_001["CAP-GOV-RSK-001\nEnterprise Risk Assessment"]:::governance
+    GOV_BUD_001["CAP-GOV-BUD-001\nBudget and Exposure Governance"]:::governance
+    GOV_AUD_001["CAP-GOV-AUD-001\nAudit Evidence Management"]:::root
+  end
+
+  subgraph PLT["Platform"]
+    direction TB
+    PLT_IDN_001["CAP-PLT-IDN-001\nIdentity and Authentication"]:::platform
+    PLT_RUN_001["CAP-PLT-RUN-001\nDurable Execution Management"]:::platform
+    PLT_EVT_001["CAP-PLT-EVT-001\nEnterprise Event Management"]:::platform
+    PLT_INT_001["CAP-PLT-INT-001\nProvider Integration Management"]:::platform
+    PLT_KNW_001["CAP-PLT-KNW-001\nGoverned Knowledge and Memory"]:::platform
+    PLT_OBS_001["CAP-PLT-OBS-001\nEnterprise Observability"]:::root
+  end
+
+  %% Commerce dependencies
+  COM_PRO_001 --> INT_MKT_001
+
+  COM_PRO_002 --> COM_PRO_001
+  COM_PRO_002 --> COM_SUP_002
+  COM_PRO_002 --> COM_FIN_001
+  COM_PRO_002 --> GOV_RSK_001
+
+  COM_SUP_002 --> COM_SUP_001
+  COM_SUP_002 --> GOV_RSK_001
+
+  COM_BRA_001 --> GOV_PLY_001
+
+  COM_MKT_001 --> COM_BRA_001
+  COM_MKT_001 --> GOV_BUD_001
+  COM_MKT_001 --> GOV_PLY_001
+
+  COM_ORD_001 --> PLT_INT_001
+  COM_ORD_001 --> GOV_AUD_001
+
+  COM_FUL_001 --> COM_ORD_001
+  COM_FUL_001 --> PLT_INT_001
+
+  %% Intelligence dependencies
+  INT_MKT_001 --> PLT_KNW_001
+
+  INT_EXE_001 --> GOV_PLY_001
+  INT_EXE_001 --> GOV_AUD_001
+  INT_EXE_001 --> PLT_RUN_001
+
+  %% Governance dependencies
+  GOV_PLY_001 --> GOV_AUD_001
+
+  GOV_APR_001 --> GOV_PLY_001
+  GOV_APR_001 --> GOV_AUD_001
+  GOV_APR_001 --> PLT_IDN_001
+
+  GOV_RSK_001 --> GOV_PLY_001
+
+  GOV_BUD_001 --> GOV_AUD_001
+
+  %% Platform dependencies
+  PLT_IDN_001 --> GOV_AUD_001
+
+  PLT_RUN_001 --> GOV_PLY_001
+  PLT_RUN_001 --> GOV_AUD_001
+  PLT_RUN_001 --> PLT_EVT_001
+
+  PLT_EVT_001 --> GOV_AUD_001
+
+  PLT_INT_001 --> GOV_PLY_001
+  PLT_INT_001 --> GOV_AUD_001
+
+  PLT_KNW_001 --> GOV_AUD_001
+
+  %% Explicit roots: no registry dependencies
+  ROOTS["Dependency roots\nCAP-COM-SUP-001\nCAP-COM-FIN-001\nCAP-GOV-AUD-001\nCAP-PLT-OBS-001"]:::root
+  ROOTS -. documents .-> COM_SUP_001
+  ROOTS -. documents .-> COM_FIN_001
+  ROOTS -. documents .-> GOV_AUD_001
+  ROOTS -. documents .-> PLT_OBS_001
+
+  %% Review constraints
+  NOTE1["Invariant: every dependency ID must resolve to exactly one registered capability"]:::root
+  NOTE2["Invariant: the directed dependency graph must remain acyclic"]:::root
+  NOTE3["Invariant: governance and audit dependencies cannot be bypassed by runtime or AI"]:::root
+
+  NOTE1 -. validates .-> COM_PRO_002
+  NOTE2 -. validates .-> INT_EXE_001
+  NOTE3 -. constrains .-> PLT_RUN_001
