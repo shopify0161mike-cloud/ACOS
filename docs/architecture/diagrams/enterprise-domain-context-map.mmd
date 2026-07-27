@@ -1,0 +1,155 @@
+%% ACOS Enterprise Domain Context Map
+%% Architecture Chapter: 1.2 Enterprise Domain Architecture
+%% Status: canonical foundation
+
+flowchart LR
+
+  classDef commerce fill:#ecfeff,stroke:#0e7490,stroke-width:1.5px,color:#0f172a;
+  classDef intelligence fill:#f3e8ff,stroke:#7e22ce,stroke-width:1.5px,color:#0f172a;
+  classDef governance fill:#fff1f2,stroke:#be123c,stroke-width:1.5px,color:#0f172a;
+  classDef platform fill:#ecfdf5,stroke:#047857,stroke-width:1.5px,color:#0f172a;
+  classDef human fill:#fff7ed,stroke:#c2410c,stroke-width:2px,color:#0f172a;
+  classDef external fill:#f8fafc,stroke:#475569,stroke-width:1.5px,color:#0f172a;
+
+  HUMAN["Human Strategic Authority"]:::human
+
+  subgraph COM["Commerce Domain Group"]
+    direction TB
+    PRO["Product"]:::commerce
+    SUP["Supplier"]:::commerce
+    FIN["Finance"]:::commerce
+    BRA["Brand"]:::commerce
+    MKT["Marketing"]:::commerce
+    SAL["Sales and Pricing"]:::commerce
+    CUS["Customer"]:::commerce
+    INV["Inventory"]:::commerce
+    ORD["Orders"]:::commerce
+    FUL["Fulfillment"]:::commerce
+    ANA["Analytics"]:::commerce
+  end
+
+  subgraph INT["Intelligence Domain Group"]
+    direction TB
+    MI["Market Intelligence"]:::intelligence
+    SI["Specialist Intelligence"]:::intelligence
+    EXE["Executive Planning and Coordination"]:::intelligence
+  end
+
+  subgraph GOV["Governance Domain Group"]
+    direction TB
+    PLY["Policy"]:::governance
+    APR["Approval"]:::governance
+    RSK["Risk"]:::governance
+    BUD["Budget and Exposure"]:::governance
+    AUD["Audit"]:::governance
+    SEC["Security and Compliance"]:::governance
+  end
+
+  subgraph PLT["Platform Domain Group"]
+    direction TB
+    IDN["Identity and Access"]:::platform
+    RUN["Durable Execution"]:::platform
+    EVT["Enterprise Events"]:::platform
+    INTEG["Integration / Anti-Corruption Layer"]:::platform
+    KNW["Knowledge"]:::platform
+    OBS["Observability"]:::platform
+    CFG["Configuration and Deployment"]:::platform
+  end
+
+  EXT["External Providers and Channels"]:::external
+
+  HUMAN -->|authenticated decisions| APR
+  APR -->|accepted or rejected fact| PRO
+  IDN -->|trusted identity and access decision| APR
+
+  KNW -->|governed evidence| MI
+  MI -->|opportunity recommendation| PRO
+  SI -->|domain recommendations| PRO
+  SI -->|domain recommendations| SUP
+  SI -->|domain recommendations| MKT
+
+  PRO -->|qualification request| SUP
+  SUP -->|supplier evidence| PRO
+  PRO -->|economics request| FIN
+  FIN -->|unit economics| PRO
+  PRO -->|accepted product fact| BRA
+  BRA -->|brand identity contract| MKT
+  PRO -->|published product fact| MKT
+  MKT -->|campaign intent| SAL
+  SAL -->|offer and price contract| ORD
+  CUS -->|customer eligibility projection| ORD
+  INV -->|availability and reservation| ORD
+  ORD -->|order captured fact| FUL
+  FUL -->|delivery and exception facts| ORD
+
+  PRO -->|domain events| EVT
+  SUP -->|domain events| EVT
+  FIN -->|domain events| EVT
+  BRA -->|domain events| EVT
+  MKT -->|domain events| EVT
+  SAL -->|domain events| EVT
+  CUS -->|domain events| EVT
+  INV -->|domain events| EVT
+  ORD -->|domain events| EVT
+  FUL -->|domain events| EVT
+
+  EVT -->|published event contracts| ANA
+  ANA -->|outcome and feedback signals| EXE
+  EXE -->|governed execution intents| RUN
+  RUN -->|commands through owning context| PRO
+  RUN -->|commands through owning context| MKT
+  RUN -->|commands through owning context| ORD
+  RUN -->|commands through owning context| FUL
+
+  PRO -->|policy evaluation request| PLY
+  SUP -->|policy evaluation request| PLY
+  MKT -->|policy evaluation request| PLY
+  ORD -->|policy evaluation request| PLY
+  EXE -->|policy evaluation request| PLY
+
+  PRO -->|risk assessment request| RSK
+  SUP -->|risk assessment request| RSK
+  EXE -->|risk assessment request| RSK
+
+  FIN -->|budget and exposure request| BUD
+  MKT -->|budget and exposure request| BUD
+  EXE -->|budget and exposure request| BUD
+
+  PLY -->|authoritative decision| RUN
+  RSK -->|authoritative constraint| RUN
+  BUD -->|authoritative constraint| RUN
+  APR -->|human-exclusive decision| RUN
+  IDN -->|identity and access decision| RUN
+
+  RUN -->|provider operation request| INTEG
+  INTEG -->|normalized provider contract| RUN
+  INTEG -->|provider-specific protocol| EXT
+  EXT -->|provider response| INTEG
+
+  RUN -->|execution telemetry| OBS
+  EVT -->|delivery telemetry| OBS
+  INTEG -->|provider telemetry| OBS
+  CFG -->|versioned runtime configuration| RUN
+  CFG -->|deployment metadata| OBS
+
+  PLY -. decision evidence .-> AUD
+  APR -. human decision evidence .-> AUD
+  RSK -. risk evidence .-> AUD
+  BUD -. budget evidence .-> AUD
+  IDN -. identity evidence .-> AUD
+  RUN -. execution evidence .-> AUD
+  EVT -. event evidence .-> AUD
+  INTEG -. provider operation evidence .-> AUD
+  SEC -. control obligations .-> PLY
+  SEC -. control evidence requirements .-> AUD
+
+  %% Architectural invariants
+  I1["No shared database or cross-domain writes"]:::external
+  I2["External provider semantics remain behind the ACL"]:::external
+  I3["Governance decisions fail closed"]:::external
+  I4["AI recommendations require owning-domain acceptance"]:::external
+
+  I1 -. constrains .-> COM
+  I2 -. constrains .-> INTEG
+  I3 -. constrains .-> GOV
+  I4 -. constrains .-> INT
