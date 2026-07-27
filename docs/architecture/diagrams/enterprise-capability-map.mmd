@@ -1,0 +1,125 @@
+%% ACOS Enterprise Capability Map
+%% Architecture Chapter: 1.1 Enterprise Capability Architecture
+%% Source of truth: config/capabilities/registry.yaml
+%% Status: canonical
+%%
+%% This map shows the Phase 1 enterprise capability landscape grouped by
+%% Commerce, Intelligence, Governance and Platform. Arrows represent the
+%% principal governed value flow, not every dependency in the registry.
+
+flowchart TB
+
+  classDef commerce fill:#e8f3ff,stroke:#1d4ed8,stroke-width:1.5px,color:#0f172a;
+  classDef intelligence fill:#f3e8ff,stroke:#7e22ce,stroke-width:1.5px,color:#0f172a;
+  classDef governance fill:#fff1f2,stroke:#be123c,stroke-width:1.5px,color:#0f172a;
+  classDef platform fill:#ecfdf5,stroke:#047857,stroke-width:1.5px,color:#0f172a;
+  classDef human fill:#fff7ed,stroke:#c2410c,stroke-width:2px,color:#0f172a;
+  classDef boundary fill:#f8fafc,stroke:#475569,stroke-width:1px,stroke-dasharray:5 5,color:#0f172a;
+
+  HSA["Human Strategic Authority\nProduct acceptance only"]:::human
+
+  subgraph ENT["ACOS Enterprise Capability Landscape"]
+    direction TB
+
+    subgraph INT["Intelligence Capabilities"]
+      direction LR
+      INT_MKT["CAP-INT-MKT-001\nMarket Intelligence"]:::intelligence
+      INT_EXE["CAP-INT-EXE-001\nEnterprise Planning and Coordination\nExecutive Brain"]:::intelligence
+    end
+
+    subgraph COM["Commerce Capabilities"]
+      direction TB
+
+      subgraph COM_DISC["Discovery and Qualification"]
+        direction LR
+        COM_PRO_DISC["CAP-COM-PRO-001\nProduct Discovery"]:::commerce
+        COM_PRO_QUAL["CAP-COM-PRO-002\nProduct Qualification"]:::commerce
+        COM_SUP_DISC["CAP-COM-SUP-001\nSupplier Discovery"]:::commerce
+        COM_SUP_QUAL["CAP-COM-SUP-002\nSupplier Qualification"]:::commerce
+        COM_FIN["CAP-COM-FIN-001\nUnit Economics Modeling"]:::commerce
+      end
+
+      subgraph COM_GTM["Brand and Go-to-Market"]
+        direction LR
+        COM_BRA["CAP-COM-BRA-001\nBrand Identity Management"]:::commerce
+        COM_MKT["CAP-COM-MKT-001\nCampaign Planning"]:::commerce
+      end
+
+      subgraph COM_OPS["Commerce Operations"]
+        direction LR
+        COM_ORD["CAP-COM-ORD-001\nOrder Lifecycle Management"]:::commerce
+        COM_FUL["CAP-COM-FUL-001\nFulfillment Coordination"]:::commerce
+      end
+    end
+
+    subgraph GOV["Governance Capabilities"]
+      direction LR
+      GOV_PLY["CAP-GOV-PLY-001\nPolicy Evaluation"]:::governance
+      GOV_APR["CAP-GOV-APR-001\nProduct Acceptance Approval"]:::governance
+      GOV_RSK["CAP-GOV-RSK-001\nEnterprise Risk Assessment"]:::governance
+      GOV_BUD["CAP-GOV-BUD-001\nBudget and Exposure Governance"]:::governance
+      GOV_AUD["CAP-GOV-AUD-001\nAudit Evidence Management"]:::governance
+    end
+
+    subgraph PLT["Platform Capabilities"]
+      direction LR
+      PLT_IDN["CAP-PLT-IDN-001\nIdentity and Authentication"]:::platform
+      PLT_RUN["CAP-PLT-RUN-001\nDurable Execution Management"]:::platform
+      PLT_EVT["CAP-PLT-EVT-001\nEnterprise Event Management"]:::platform
+      PLT_INT["CAP-PLT-INT-001\nProvider Integration Management"]:::platform
+      PLT_KNW["CAP-PLT-KNW-001\nGoverned Knowledge and Memory"]:::platform
+      PLT_OBS["CAP-PLT-OBS-001\nEnterprise Observability"]:::platform
+    end
+  end
+
+  %% Primary enterprise value flow
+  PLT_KNW --> INT_MKT
+  INT_MKT --> COM_PRO_DISC
+  COM_PRO_DISC --> COM_PRO_QUAL
+  COM_SUP_DISC --> COM_SUP_QUAL
+  COM_SUP_QUAL --> COM_PRO_QUAL
+  COM_FIN --> COM_PRO_QUAL
+  GOV_RSK --> COM_PRO_QUAL
+  COM_PRO_QUAL --> GOV_APR
+  HSA --> GOV_APR
+  GOV_APR --> COM_BRA
+  COM_BRA --> COM_MKT
+  COM_ORD --> COM_FUL
+
+  %% Executive coordination and governed execution
+  INT_EXE --> PLT_RUN
+  INT_EXE --> COM_PRO_DISC
+  INT_EXE --> COM_MKT
+  INT_EXE --> COM_ORD
+  GOV_PLY --> INT_EXE
+  GOV_BUD --> INT_EXE
+
+  %% Cross-cutting governance controls
+  GOV_PLY -. policy gate .-> COM_PRO_QUAL
+  GOV_PLY -. policy gate .-> COM_MKT
+  GOV_PLY -. policy gate .-> PLT_RUN
+  GOV_BUD -. exposure gate .-> COM_FIN
+  GOV_BUD -. budget gate .-> COM_MKT
+  PLT_IDN -. authenticated authority .-> GOV_APR
+  GOV_AUD -. evidence .-> GOV_PLY
+  GOV_AUD -. evidence .-> GOV_APR
+  GOV_AUD -. evidence .-> PLT_RUN
+
+  %% Shared platform enablement
+  PLT_EVT --> PLT_RUN
+  PLT_INT --> COM_SUP_DISC
+  PLT_INT --> COM_ORD
+  PLT_INT --> COM_FUL
+  PLT_OBS -. telemetry .-> INT_EXE
+  PLT_OBS -. telemetry .-> PLT_RUN
+  PLT_OBS -. telemetry .-> COM_ORD
+  PLT_KNW -. governed evidence .-> INT_EXE
+
+  %% Architectural boundary notes
+  AUTONOMY["Autonomy boundary\nAI may analyze, recommend and execute only within delegated authority"]:::boundary
+  APPROVAL["Human-exclusive boundary\nA product cannot be accepted without authenticated human approval"]:::boundary
+  AUDIT["Audit boundary\nMaterial decisions and side effects require durable, attributable evidence"]:::boundary
+
+  AUTONOMY -. constrains .-> INT_EXE
+  APPROVAL -. constrains .-> GOV_APR
+  AUDIT -. constrains .-> GOV_AUD
