@@ -17,6 +17,7 @@ docs/
   adr/                Architectural Decision Records
 config/
   constitution/       Machine-readable constitutional registry
+  capabilities/       Machine-readable enterprise capability registry
 schemas/               Validation schemas
 scripts/               Architecture and constitutional validation
 .github/workflows/     Automated compliance checks
@@ -55,20 +56,27 @@ When implementation conflicts with the Constitution, implementation changes.
 
 ```bash
 python scripts/validate_constitution.py
+python scripts/validate_capability_registry.py
+python scripts/validate_capability_dependencies.py
+python scripts/validate_capability_diagrams.py
 python -m unittest discover -s tests -p 'test_*.py'
 ```
 
-The GitHub Actions workflow runs the same checks on every push and pull request.
+GitHub Actions runs the corresponding checks for relevant pushes and pull requests.
 
 ## Canonical documents
 
 - [ACOS Constitution](docs/constitution/ACOS-CONSTITUTION.md)
+- [Enterprise Architecture Index](docs/architecture/README.md)
 - [Enterprise Context Map](docs/architecture/01.0-enterprise-context-map.md)
+- [Enterprise Capability Catalog](docs/architecture/01.1-capability-catalog.md)
+- [Capability Traceability Model](docs/architecture/01.1-capability-traceability.md)
 - [ADR index](docs/adr/README.md)
-- [Machine-readable rule registry](config/constitution/registry.yaml)
+- [Machine-readable constitutional registry](config/constitution/registry.yaml)
+- [Machine-readable capability registry](config/capabilities/registry.yaml)
 
 ## Status
 
 Part 0 — Constitution is canonical through Chapter 0.13.
 
-Part I — Enterprise Architecture has started with Chapter 1.0, the Enterprise Context Map.
+Part I — Enterprise Architecture is canonical through Chapter 1.1, Enterprise Capability Architecture. Chapter 1.2, Enterprise Domain Architecture, is next.
