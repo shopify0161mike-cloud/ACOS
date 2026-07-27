@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'config/capabilities/**'
+      - 'config/domains/**'
       - 'schemas/**'
       - 'docs/architecture/**'
       - 'scripts/**'
@@ -12,6 +13,7 @@ on:
   pull_request:
     paths:
       - 'config/capabilities/**'
+      - 'config/domains/**'
       - 'schemas/**'
       - 'docs/architecture/**'
       - 'scripts/**'
@@ -55,6 +57,35 @@ jobs:
 
       - name: Validate canonical capability diagrams
         run: python scripts/validate_capability_diagrams.py
+
+  domain-architecture:
+    name: Domain architecture controls
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install validation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install 'jsonschema[format]>=4.23,<5' 'PyYAML>=6.0,<7'
+
+      - name: Validate domain registry
+        run: python scripts/validate_domain_registry.py
+
+      - name: Validate domain references and ownership
+        run: python scripts/validate_domain_references.py
+
+      - name: Reject circular domain dependencies
+        run: python scripts/validate_domain_dependencies.py
 
   repository-compliance:
     name: Existing repository compliance suite
