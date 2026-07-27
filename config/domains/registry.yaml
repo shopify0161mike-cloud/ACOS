@@ -1,0 +1,762 @@
+registry_version: 1.0.0
+architecture_chapter: '1.2'
+status: canonical
+
+domains:
+  - id: DOM-COM-PRO-001
+    name: Product Domain
+    domain_group: commerce
+    bounded_context: product
+    purpose: Govern product discovery, qualification, acceptance readiness and product lifecycle state.
+    business_owner: Chief Commerce Officer
+    technical_owner: Product Platform Lead
+    classification: core
+    status: approved
+    owned_capabilities:
+      - CAP-COM-PRO-001
+      - CAP-COM-PRO-002
+    owned_data:
+      - product_candidates
+      - product_qualification_records
+      - product_lifecycle
+    commands_accepted:
+      - discover_product_candidate
+      - qualify_product_candidate
+      - submit_product_for_acceptance
+    events_published:
+      - product.candidate_discovered.v1
+      - product.validation_completed.v1
+      - approval.product_acceptance_requested.v1
+    events_consumed:
+      - market.opportunity_identified.v1
+      - supplier.qualification_completed.v1
+      - approval.product_accepted.v1
+      - approval.product_rejected.v1
+    upstream_domains:
+      - DOM-INT-MKT-001
+      - DOM-COM-SUP-001
+      - DOM-GOV-APR-001
+    downstream_domains:
+      - DOM-COM-BRA-001
+      - DOM-COM-MKT-001
+    integration_patterns:
+      - customer_supplier
+      - published_language
+    external_dependencies: []
+    governance_policies:
+      - POL-GOV-AUT-001
+      - POL-GOV-RSK-001
+      - POL-GOV-APR-001
+    invariants:
+      - Product qualification must retain evidence, provenance, assumptions and confidence.
+      - A product cannot become accepted without authenticated human approval.
+    implementation_refs: []
+
+  - id: DOM-COM-SUP-001
+    name: Supplier Domain
+    domain_group: commerce
+    bounded_context: supplier
+    purpose: Discover, qualify and govern suppliers independently from provider-specific representations.
+    business_owner: Chief Supply Officer
+    technical_owner: Supplier Platform Lead
+    classification: core
+    status: approved
+    owned_capabilities:
+      - CAP-COM-SUP-001
+      - CAP-COM-SUP-002
+    owned_data:
+      - supplier_candidates
+      - supplier_qualification_records
+      - supplier_profiles
+    commands_accepted:
+      - discover_supplier
+      - qualify_supplier
+    events_published:
+      - supplier.candidate_discovered.v1
+      - supplier.qualification_completed.v1
+    events_consumed:
+      - integration.operation_recorded.v1
+    upstream_domains:
+      - DOM-PLT-INT-001
+      - DOM-GOV-RSK-001
+    downstream_domains:
+      - DOM-COM-PRO-001
+      - DOM-COM-FUL-001
+    integration_patterns:
+      - anti_corruption_layer
+      - customer_supplier
+    external_dependencies:
+      - supplier marketplaces
+      - supplier APIs
+    governance_policies:
+      - POL-GOV-RSK-001
+      - POL-INT-001
+    invariants:
+      - External supplier data must enter through governed adapters.
+      - Supplier qualification must be reproducible from retained evidence.
+    implementation_refs: []
+
+  - id: DOM-COM-FIN-001
+    name: Commerce Finance Domain
+    domain_group: commerce
+    bounded_context: commerce_finance
+    purpose: Own deterministic unit economics, commercial margin and product-level financial models.
+    business_owner: Chief Financial Officer
+    technical_owner: Finance Platform Lead
+    classification: core
+    status: approved
+    owned_capabilities:
+      - CAP-COM-FIN-001
+    owned_data:
+      - unit_economics_models
+      - margin_models
+    commands_accepted:
+      - calculate_unit_economics
+    events_published:
+      - finance.unit_economics_calculated.v1
+    events_consumed: []
+    upstream_domains: []
+    downstream_domains:
+      - DOM-COM-PRO-001
+      - DOM-GOV-BUD-001
+    integration_patterns:
+      - open_host_service
+      - published_language
+    external_dependencies: []
+    governance_policies:
+      - POL-GOV-BUD-001
+    invariants:
+      - Financial calculations must be deterministic and reproducible.
+      - Financial source values must retain currency, timestamp and provenance.
+    implementation_refs: []
+
+  - id: DOM-COM-BRA-001
+    name: Brand Domain
+    domain_group: commerce
+    bounded_context: brand
+    purpose: Own brand identity, voice, claims constraints and visual governance.
+    business_owner: Chief Brand Officer
+    technical_owner: Brand Platform Lead
+    classification: supporting
+    status: approved
+    owned_capabilities:
+      - CAP-COM-BRA-001
+    owned_data:
+      - brand_identity
+      - brand_rules
+      - approved_claims
+    commands_accepted:
+      - create_brand_identity
+      - revise_brand_identity
+    events_published:
+      - brand.identity_generated.v1
+    events_consumed:
+      - approval.product_accepted.v1
+    upstream_domains:
+      - DOM-COM-PRO-001
+      - DOM-GOV-PLY-001
+    downstream_domains:
+      - DOM-COM-MKT-001
+    integration_patterns:
+      - customer_supplier
+    external_dependencies: []
+    governance_policies:
+      - POL-GOV-CLM-001
+    invariants:
+      - Brand claims must be policy-evaluated before publication.
+      - Brand identity is owned here and cannot be overwritten by marketing channels.
+    implementation_refs: []
+
+  - id: DOM-COM-MKT-001
+    name: Marketing Domain
+    domain_group: commerce
+    bounded_context: marketing
+    purpose: Plan and govern campaigns within approved brand, budget and policy constraints.
+    business_owner: Chief Marketing Officer
+    technical_owner: Marketing Platform Lead
+    classification: core
+    status: approved
+    owned_capabilities:
+      - CAP-COM-MKT-001
+    owned_data:
+      - campaign_plans
+      - campaign_controls
+    commands_accepted:
+      - create_campaign_plan
+      - revise_campaign_plan
+    events_published:
+      - marketing.campaign_planned.v1
+    events_consumed:
+      - brand.identity_generated.v1
+      - governance.budget_decision_recorded.v1
+    upstream_domains:
+      - DOM-COM-BRA-001
+      - DOM-GOV-BUD-001
+      - DOM-GOV-PLY-001
+    downstream_domains: []
+    integration_patterns:
+      - customer_supplier
+      - anti_corruption_layer
+    external_dependencies:
+      - advertising platforms
+      - content distribution platforms
+    governance_policies:
+      - POL-GOV-BUD-001
+      - POL-GOV-CLM-001
+    invariants:
+      - Campaign execution cannot exceed delegated budget or exposure.
+      - Published claims must conform to approved brand and policy rules.
+    implementation_refs: []
+
+  - id: DOM-COM-ORD-001
+    name: Orders Domain
+    domain_group: commerce
+    bounded_context: orders
+    purpose: Own the authoritative order lifecycle and all valid order state transitions.
+    business_owner: Chief Operating Officer
+    technical_owner: Order Platform Lead
+    classification: core
+    status: approved
+    owned_capabilities:
+      - CAP-COM-ORD-001
+    owned_data:
+      - orders
+      - order_state_transitions
+    commands_accepted:
+      - capture_order
+      - cancel_order
+      - refund_order
+    events_published:
+      - order.captured.v1
+      - order.state_changed.v1
+    events_consumed:
+      - integration.operation_recorded.v1
+    upstream_domains:
+      - DOM-PLT-INT-001
+      - DOM-GOV-PLY-001
+    downstream_domains:
+      - DOM-COM-FUL-001
+    integration_patterns:
+      - anti_corruption_layer
+      - published_language
+    external_dependencies:
+      - commerce platforms
+      - payment providers
+    governance_policies:
+      - POL-GOV-FIN-001
+    invariants:
+      - Every order transition must be valid, idempotent and auditable.
+      - No other domain may directly mutate order state.
+    implementation_refs: []
+
+  - id: DOM-COM-FUL-001
+    name: Fulfillment Domain
+    domain_group: commerce
+    bounded_context: fulfillment
+    purpose: Coordinate shipment, delivery, exception and return activity after order capture.
+    business_owner: Chief Operating Officer
+    technical_owner: Fulfillment Platform Lead
+    classification: supporting
+    status: approved
+    owned_capabilities:
+      - CAP-COM-FUL-001
+    owned_data:
+      - fulfillment_cases
+      - shipment_state
+      - delivery_exceptions
+    commands_accepted:
+      - create_fulfillment_case
+      - update_shipment
+      - resolve_delivery_exception
+    events_published:
+      - fulfillment.shipment_updated.v1
+    events_consumed:
+      - order.captured.v1
+      - integration.operation_recorded.v1
+    upstream_domains:
+      - DOM-COM-ORD-001
+      - DOM-PLT-INT-001
+    downstream_domains: []
+    integration_patterns:
+      - customer_supplier
+      - anti_corruption_layer
+    external_dependencies:
+      - carriers
+      - third-party logistics providers
+    governance_policies:
+      - POL-GOV-AUT-001
+      - POL-INT-001
+    invariants:
+      - Shipment state must remain traceable to the authoritative order.
+      - Provider-specific shipment states must be translated before entering the domain.
+    implementation_refs: []
+
+  - id: DOM-INT-MKT-001
+    name: Market Intelligence Domain
+    domain_group: intelligence
+    bounded_context: market_intelligence
+    purpose: Convert governed external and internal evidence into market opportunity intelligence.
+    business_owner: Chief Strategy Officer
+    technical_owner: AI Platform Lead
+    classification: core
+    status: approved
+    owned_capabilities:
+      - CAP-INT-MKT-001
+    owned_data:
+      - market_opportunities
+      - market_evidence
+    commands_accepted:
+      - analyze_market_evidence
+    events_published:
+      - market.opportunity_identified.v1
+    events_consumed: []
+    upstream_domains:
+      - DOM-PLT-KNW-001
+    downstream_domains:
+      - DOM-COM-PRO-001
+      - DOM-INT-EXE-001
+    integration_patterns:
+      - published_language
+      - customer_supplier
+    external_dependencies: []
+    governance_policies:
+      - POL-GOV-AUT-001
+    invariants:
+      - Intelligence outputs must include evidence, assumptions, freshness and confidence.
+      - Intelligence may recommend but cannot accept products or increase authority.
+    implementation_refs: []
+
+  - id: DOM-INT-EXE-001
+    name: Executive Coordination Domain
+    domain_group: intelligence
+    bounded_context: executive_coordination
+    purpose: Translate strategy into governed cross-domain plans without owning domain business state.
+    business_owner: Chief Executive Officer
+    technical_owner: Executive Brain Lead
+    classification: core
+    status: approved
+    owned_capabilities:
+      - CAP-INT-EXE-001
+    owned_data:
+      - enterprise_plans
+      - plan_revisions
+    commands_accepted:
+      - create_enterprise_plan
+      - revise_enterprise_plan
+    events_published:
+      - executive.plan_created.v1
+      - executive.plan_revised.v1
+    events_consumed:
+      - analytics.outcome_recorded.v1
+      - market.opportunity_identified.v1
+    upstream_domains:
+      - DOM-INT-MKT-001
+      - DOM-GOV-PLY-001
+      - DOM-GOV-BUD-001
+    downstream_domains:
+      - DOM-PLT-RUN-001
+    integration_patterns:
+      - partnership
+      - customer_supplier
+    external_dependencies: []
+    governance_policies:
+      - POL-GOV-AUT-001
+      - POL-GOV-BUD-001
+    invariants:
+      - Plans must contain evidence, constraints, budgets, gates and rollback.
+      - Coordination does not grant ownership of another domain's data.
+    implementation_refs: []
+
+  - id: DOM-GOV-PLY-001
+    name: Policy Domain
+    domain_group: governance
+    bounded_context: policy
+    purpose: Evaluate intended actions against constitutional and domain policy before material side effects.
+    business_owner: Chief Governance Officer
+    technical_owner: Governance Platform Lead
+    classification: core
+    status: approved
+    owned_capabilities:
+      - CAP-GOV-PLY-001
+    owned_data:
+      - policy_decisions
+      - policy_versions
+    commands_accepted:
+      - evaluate_policy
+    events_published:
+      - governance.policy_decision_recorded.v1
+    events_consumed: []
+    upstream_domains:
+      - DOM-GOV-AUD-001
+    downstream_domains:
+      - DOM-GOV-RSK-001
+      - DOM-GOV-APR-001
+      - DOM-PLT-RUN-001
+      - DOM-PLT-INT-001
+    integration_patterns:
+      - open_host_service
+      - published_language
+    external_dependencies: []
+    governance_policies:
+      - POL-CON-001
+    invariants:
+      - Sensitive policy evaluation failures must fail closed.
+      - Policy decisions must identify the exact policy versions evaluated.
+    implementation_refs: []
+
+  - id: DOM-GOV-RSK-001
+    name: Risk Domain
+    domain_group: governance
+    bounded_context: risk
+    purpose: Identify, score and constrain material enterprise risk using explainable assessments.
+    business_owner: Chief Risk Officer
+    technical_owner: Governance Platform Lead
+    classification: core
+    status: approved
+    owned_capabilities:
+      - CAP-GOV-RSK-001
+    owned_data:
+      - risk_assessments
+      - risk_thresholds
+    commands_accepted:
+      - assess_enterprise_risk
+    events_published:
+      - risk.assessment_completed.v1
+    events_consumed:
+      - governance.policy_decision_recorded.v1
+    upstream_domains:
+      - DOM-GOV-PLY-001
+    downstream_domains:
+      - DOM-COM-PRO-001
+      - DOM-COM-SUP-001
+      - DOM-GOV-APR-001
+    integration_patterns:
+      - customer_supplier
+      - published_language
+    external_dependencies: []
+    governance_policies:
+      - POL-GOV-RSK-001
+    invariants:
+      - Material risk decisions must be explainable and policy-linked.
+      - Risk thresholds cannot be modified by the assessed workload.
+    implementation_refs: []
+
+  - id: DOM-GOV-BUD-001
+    name: Budget Governance Domain
+    domain_group: governance
+    bounded_context: budget_governance
+    purpose: Own delegated budgets, exposure limits and atomic authorization of financial consumption.
+    business_owner: Chief Financial Officer
+    technical_owner: Governance Platform Lead
+    classification: core
+    status: approved
+    owned_capabilities:
+      - CAP-GOV-BUD-001
+    owned_data:
+      - budget_allocations
+      - exposure_decisions
+    commands_accepted:
+      - authorize_budget_consumption
+      - allocate_budget
+    events_published:
+      - governance.budget_decision_recorded.v1
+    events_consumed:
+      - finance.unit_economics_calculated.v1
+    upstream_domains:
+      - DOM-COM-FIN-001
+      - DOM-GOV-AUD-001
+    downstream_domains:
+      - DOM-COM-MKT-001
+      - DOM-INT-EXE-001
+      - DOM-PLT-RUN-001
+    integration_patterns:
+      - open_host_service
+      - published_language
+    external_dependencies: []
+    governance_policies:
+      - POL-GOV-BUD-001
+    invariants:
+      - Budget checks must be atomic and fail closed.
+      - A workload cannot grant itself additional budget or exposure.
+    implementation_refs: []
+
+  - id: DOM-GOV-APR-001
+    name: Approval Domain
+    domain_group: governance
+    bounded_context: approval
+    purpose: Persist authenticated human-exclusive acceptance and rejection decisions.
+    business_owner: Human Strategic Authority
+    technical_owner: Governance Platform Lead
+    classification: core
+    status: approved
+    owned_capabilities:
+      - CAP-GOV-APR-001
+    owned_data:
+      - approval_records
+      - approval_evidence_packages
+    commands_accepted:
+      - request_product_acceptance
+      - record_product_acceptance
+      - record_product_rejection
+    events_published:
+      - approval.product_accepted.v1
+      - approval.product_rejected.v1
+    events_consumed:
+      - approval.product_acceptance_requested.v1
+      - risk.assessment_completed.v1
+      - governance.policy_decision_recorded.v1
+    upstream_domains:
+      - DOM-COM-PRO-001
+      - DOM-GOV-PLY-001
+      - DOM-GOV-RSK-001
+      - DOM-PLT-IDN-001
+    downstream_domains:
+      - DOM-COM-PRO-001
+      - DOM-COM-BRA-001
+    integration_patterns:
+      - customer_supplier
+      - published_language
+    external_dependencies: []
+    governance_policies:
+      - POL-GOV-APR-001
+    invariants:
+      - Product acceptance is human-exclusive.
+      - Approval identity, intent, evidence and replay protection must be durable.
+    implementation_refs: []
+
+  - id: DOM-GOV-AUD-001
+    name: Audit Domain
+    domain_group: governance
+    bounded_context: audit
+    purpose: Own immutable, attributable and correlated evidence for material decisions and actions.
+    business_owner: Chief Governance Officer
+    technical_owner: Security Platform Lead
+    classification: core
+    status: approved
+    owned_capabilities:
+      - CAP-GOV-AUD-001
+    owned_data:
+      - audit_evidence
+      - evidence_correlations
+    commands_accepted:
+      - append_audit_evidence
+    events_published:
+      - audit.evidence_recorded.v1
+    events_consumed: []
+    upstream_domains: []
+    downstream_domains:
+      - DOM-GOV-PLY-001
+      - DOM-GOV-BUD-001
+      - DOM-PLT-IDN-001
+      - DOM-PLT-RUN-001
+    integration_patterns:
+      - open_host_service
+      - published_language
+    external_dependencies: []
+    governance_policies:
+      - POL-CON-001
+    invariants:
+      - Audit evidence is append-only, attributable and correlated.
+      - Operational systems may append evidence but may not rewrite history.
+    implementation_refs: []
+
+  - id: DOM-PLT-IDN-001
+    name: Identity Domain
+    domain_group: platform
+    bounded_context: identity
+    purpose: Establish trusted human and workload identities for governed actions.
+    business_owner: Chief Security Officer
+    technical_owner: Security Platform Lead
+    classification: generic
+    status: approved
+    owned_capabilities:
+      - CAP-PLT-IDN-001
+    owned_data:
+      - identity_records
+      - authentication_evidence
+    commands_accepted:
+      - authenticate_identity
+      - verify_workload_identity
+    events_published:
+      - identity.authentication_recorded.v1
+    events_consumed: []
+    upstream_domains:
+      - DOM-GOV-AUD-001
+    downstream_domains:
+      - DOM-GOV-APR-001
+      - DOM-PLT-RUN-001
+    integration_patterns:
+      - open_host_service
+    external_dependencies:
+      - identity providers
+    governance_policies:
+      - POL-SEC-IDN-001
+    invariants:
+      - Identity evidence must be strong, attributable and auditable.
+      - Authentication success does not itself grant business authority.
+    implementation_refs: []
+
+  - id: DOM-PLT-RUN-001
+    name: Runtime Domain
+    domain_group: platform
+    bounded_context: durable_execution
+    purpose: Persist, coordinate and recover governed execution runs without owning domain business state.
+    business_owner: Chief Technology Officer
+    technical_owner: Runtime Platform Lead
+    classification: generic
+    status: approved
+    owned_capabilities:
+      - CAP-PLT-RUN-001
+    owned_data:
+      - executions
+      - execution_steps
+      - step_attempts
+    commands_accepted:
+      - start_execution
+      - resume_execution
+      - compensate_execution
+    events_published:
+      - runtime.execution_state_changed.v1
+    events_consumed:
+      - executive.plan_created.v1
+      - executive.plan_revised.v1
+      - governance.policy_decision_recorded.v1
+      - governance.budget_decision_recorded.v1
+    upstream_domains:
+      - DOM-INT-EXE-001
+      - DOM-GOV-PLY-001
+      - DOM-GOV-BUD-001
+      - DOM-PLT-IDN-001
+    downstream_domains:
+      - DOM-PLT-INT-001
+      - DOM-PLT-EVT-001
+    integration_patterns:
+      - customer_supplier
+      - partnership
+    external_dependencies: []
+    governance_policies:
+      - POL-RUN-001
+      - POL-GOV-AUT-001
+    invariants:
+      - Every material side effect must be governed, idempotent and correlated.
+      - Runtime coordination cannot directly mutate another domain's persistence.
+    implementation_refs:
+      - DV | Migration 002 | Execution Runtime
+
+  - id: DOM-PLT-EVT-001
+    name: Event Domain
+    domain_group: platform
+    bounded_context: enterprise_events
+    purpose: Publish, deliver, replay and observe versioned enterprise events.
+    business_owner: Chief Technology Officer
+    technical_owner: Event Platform Lead
+    classification: generic
+    status: approved
+    owned_capabilities:
+      - CAP-PLT-EVT-001
+    owned_data:
+      - event_outbox
+      - event_inbox
+      - dead_letters
+    commands_accepted:
+      - publish_event
+      - replay_event
+    events_published:
+      - event.delivery_recorded.v1
+    events_consumed:
+      - runtime.execution_state_changed.v1
+    upstream_domains:
+      - DOM-PLT-RUN-001
+      - DOM-GOV-AUD-001
+    downstream_domains: []
+    integration_patterns:
+      - published_language
+      - open_host_service
+    external_dependencies:
+      - message infrastructure
+    governance_policies:
+      - POL-EVT-001
+    invariants:
+      - Event delivery is at-least-once and consumers must be idempotent.
+      - Published event contracts are versioned and immutable after release.
+    implementation_refs: []
+
+  - id: DOM-PLT-INT-001
+    name: Integration Domain
+    domain_group: platform
+    bounded_context: provider_integration
+    purpose: Isolate external providers behind governed and replaceable anti-corruption layers.
+    business_owner: Chief Technology Officer
+    technical_owner: Integration Platform Lead
+    classification: generic
+    status: approved
+    owned_capabilities:
+      - CAP-PLT-INT-001
+    owned_data:
+      - integration_operations
+      - provider_mappings
+    commands_accepted:
+      - execute_provider_operation
+    events_published:
+      - integration.operation_recorded.v1
+    events_consumed:
+      - governance.policy_decision_recorded.v1
+      - runtime.execution_state_changed.v1
+    upstream_domains:
+      - DOM-GOV-PLY-001
+      - DOM-PLT-RUN-001
+    downstream_domains:
+      - DOM-COM-SUP-001
+      - DOM-COM-ORD-001
+      - DOM-COM-FUL-001
+    integration_patterns:
+      - anti_corruption_layer
+      - open_host_service
+    external_dependencies:
+      - commerce providers
+      - logistics providers
+      - marketing providers
+      - supplier providers
+    governance_policies:
+      - POL-INT-001
+    invariants:
+      - Provider-specific models cannot leak into enterprise domain contracts.
+      - Every provider operation must be policy-authorized and auditable.
+    implementation_refs: []
+
+  - id: DOM-PLT-KNW-001
+    name: Knowledge Domain
+    domain_group: platform
+    bounded_context: knowledge
+    purpose: Govern reusable enterprise knowledge, evidence and retrieval context.
+    business_owner: Chief Strategy Officer
+    technical_owner: Knowledge Platform Lead
+    classification: supporting
+    status: approved
+    owned_capabilities:
+      - CAP-PLT-KNW-001
+    owned_data:
+      - knowledge_sources
+      - evidence_records
+      - retrieval_indexes
+    commands_accepted:
+      - ingest_knowledge
+      - retrieve_governed_context
+    events_published:
+      - knowledge.evidence_recorded.v1
+    events_consumed: []
+    upstream_domains: []
+    downstream_domains:
+      - DOM-INT-MKT-001
+    integration_patterns:
+      - open_host_service
+      - published_language
+    external_dependencies:
+      - search providers
+      - document stores
+    governance_policies:
+      - POL-GOV-AUT-001
+    invariants:
+      - Retrieved context must retain provenance and freshness metadata.
+      - Knowledge retrieval does not transfer source ownership to consumers.
+    implementation_refs: []
