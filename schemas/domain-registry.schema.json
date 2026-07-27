@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://acos.local/schemas/domain-registry.schema.json",
+  "title": "ACOS Enterprise Domain Registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["registry_version", "architecture_chapter", "status", "domains"],
+  "properties": {
+    "registry_version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "architecture_chapter": {"const": "1.2"},
+    "status": {"enum": ["draft", "review", "canonical", "deprecated"]},
+    "domains": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/domain"}
+    }
+  },
+  "$defs": {
+    "nonEmptyString": {"type": "string", "minLength": 1},
+    "identifier": {"type": "string", "pattern": "^DOM-(COM|INT|GOV|PLT)-[A-Z]{3}-\\d{3}$"},
+    "capabilityIdentifier": {"type": "string", "pattern": "^CAP-(COM|INT|GOV|PLT)-[A-Z]{3}-\\d{3}$"},
+    "eventName": {"type": "string", "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+\\.v[1-9][0-9]*$"},
+    "stringArray": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/nonEmptyString"},
+      "uniqueItems": true
+    },
+    "domain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "name", "domain_group", "bounded_context", "purpose",
+        "business_owner", "technical_owner", "classification", "status",
+        "owned_capabilities", "owned_data", "commands_accepted",
+        "events_published", "events_consumed", "upstream_domains",
+        "downstream_domains", "integration_patterns", "external_dependencies",
+        "governance_policies", "invariants"
+      ],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "name": {"$ref": "#/$defs/nonEmptyString"},
+        "domain_group": {"enum": ["commerce", "intelligence", "governance", "platform"]},
+        "bounded_context": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+        "purpose": {"$ref": "#/$defs/nonEmptyString"},
+        "business_owner": {"$ref": "#/$defs/nonEmptyString"},
+        "technical_owner": {"$ref": "#/$defs/nonEmptyString"},
+        "classification": {"enum": ["core", "supporting", "generic"]},
+        "status": {"enum": ["proposed", "approved", "operational", "deprecated", "retired"]},
+        "owned_capabilities": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/capabilityIdentifier"},
+          "uniqueItems": true
+        },
+        "owned_data": {"$ref": "#/$defs/stringArray"},
+        "commands_accepted": {"$ref": "#/$defs/stringArray"},
+        "events_published": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/eventName"},
+          "uniqueItems": true
+        },
+        "events_consumed": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/eventName"},
+          "uniqueItems": true
+        },
+        "upstream_domains": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/identifier"},
+          "uniqueItems": true
+        },
+        "downstream_domains": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/identifier"},
+          "uniqueItems": true
+        },
+        "integration_patterns": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "published_language", "open_host_service", "customer_supplier",
+              "partnership", "conformist", "anti_corruption_layer",
+              "separate_ways", "shared_kernel"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "external_dependencies": {"$ref": "#/$defs/stringArray"},
+        "governance_policies": {"$ref": "#/$defs/stringArray"},
+        "invariants": {"$ref": "#/$defs/stringArray"},
+        "implementation_refs": {"$ref": "#/$defs/stringArray", "default": []}
+      }
+    }
+  }
+}
