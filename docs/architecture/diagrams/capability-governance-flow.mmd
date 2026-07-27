@@ -1,0 +1,118 @@
+%% ACOS Capability Governance Flow
+%% Architecture Chapter: 1.1 Enterprise Capability Architecture
+%% Status: canonical
+%%
+%% This diagram defines the mandatory governance path for material capability
+%% decisions and runtime side effects. It combines constitutional authority,
+%% policy evaluation, risk, budget, human-exclusive approval, durable runtime,
+%% validation, observability and immutable audit evidence.
+
+flowchart TB
+
+  classDef request fill:#f8fafc,stroke:#475569,stroke-width:1.5px,color:#0f172a;
+  classDef intelligence fill:#f3e8ff,stroke:#7e22ce,stroke-width:1.5px,color:#0f172a;
+  classDef governance fill:#fff1f2,stroke:#be123c,stroke-width:1.5px,color:#0f172a;
+  classDef human fill:#fff7ed,stroke:#c2410c,stroke-width:2px,color:#0f172a;
+  classDef runtime fill:#ecfdf5,stroke:#047857,stroke-width:1.5px,color:#0f172a;
+  classDef reject fill:#fef2f2,stroke:#991b1b,stroke-width:2px,color:#0f172a;
+  classDef evidence fill:#eef2ff,stroke:#4338ca,stroke-width:1.5px,color:#0f172a;
+  classDef decision fill:#fefce8,stroke:#a16207,stroke-width:1.5px,color:#0f172a;
+
+  START(["Capability proposal or material action request"]):::request
+  CONTEXT["Build governed context\nidentity, intent, capability, evidence, constraints, budget, correlation ID"]:::request
+  RESOLVE["Resolve capability and authority\nregistry, lifecycle state, owner, dependencies, classification"]:::governance
+  VALID_REG{"Registry and schema valid?"}:::decision
+  POLICY["CAP-GOV-PLY-001\nPolicy Evaluation"]:::governance
+  POLICY_OK{"Constitution and policies permit evaluation to continue?"}:::decision
+  RISK["CAP-GOV-RSK-001\nEnterprise Risk Assessment"]:::governance
+  RISK_OK{"Residual risk within delegated threshold?"}:::decision
+  BUDGET["CAP-GOV-BUD-001\nBudget and Exposure Governance"]:::governance
+  BUDGET_OK{"Budget and exposure available?"}:::decision
+  AUTH{"Required authority level"}:::decision
+
+  AI_ANALYZE["AI may analyze or recommend\nNo side effect"]:::intelligence
+  EXEC_PLAN["CAP-INT-EXE-001\nCreate governed execution plan\nsteps, gates, rollback, acceptance criteria"]:::intelligence
+  HUMAN_REQ["Request authenticated human decision\nproduct acceptance evidence package"]:::governance
+  HUMAN["Human Strategic Authority\nexplicit approve or reject"]:::human
+  HUMAN_OK{"Human approval valid, attributable and replay-protected?"}:::decision
+
+  RUNTIME_GATE["Runtime Gate\nverify policy decision, authority, lifecycle, idempotency key and approvals"]:::governance
+  GATE_OK{"All runtime preconditions satisfied?"}:::decision
+  EXECUTE["CAP-PLT-RUN-001\nDurable Execution Management"]:::runtime
+  PROVIDER["CAP-PLT-INT-001\nGoverned provider adapter"]:::runtime
+  VALIDATE["Validate result\ncontract, acceptance criteria, security and policy postconditions"]:::governance
+  RESULT_OK{"Result valid?"}:::decision
+  COMMIT["Commit governed state transition\nand emit versioned event"]:::runtime
+  ROLLBACK["Execute compensating action or rollback\nquarantine unresolved side effects"]:::reject
+
+  OBSERVE["CAP-PLT-OBS-001\nCorrelated logs, metrics, traces and alerts"]:::runtime
+  OUTCOME["Record business and operational outcome\nfeed planning and improvement"]:::intelligence
+  AUDIT["CAP-GOV-AUD-001\nAppend immutable, attributable audit evidence"]:::evidence
+
+  DENY["Deny request\nNo side effect permitted"]:::reject
+  REWORK["Return for correction, additional evidence or redesign"]:::reject
+  ESCALATE["Escalate to human authority or governance owner"]:::human
+  END(["Governed completion"]):::request
+
+  START --> CONTEXT --> RESOLVE --> VALID_REG
+  VALID_REG -- No --> REWORK
+  VALID_REG -- Yes --> POLICY --> POLICY_OK
+  POLICY_OK -- No --> DENY
+  POLICY_OK -- Yes --> RISK --> RISK_OK
+  RISK_OK -- No, prohibited --> DENY
+  RISK_OK -- No, requires authority --> ESCALATE
+  RISK_OK -- Yes --> BUDGET --> BUDGET_OK
+  BUDGET_OK -- No --> DENY
+  BUDGET_OK -- Yes --> AUTH
+
+  AUTH -- Analyze or recommend --> AI_ANALYZE
+  AI_ANALYZE --> AUDIT
+  AI_ANALYZE --> END
+
+  AUTH -- Execute within delegated authority --> EXEC_PLAN
+  AUTH -- Coordinate autonomy --> EXEC_PLAN
+  AUTH -- Human-exclusive product acceptance --> HUMAN_REQ
+  HUMAN_REQ --> HUMAN --> HUMAN_OK
+  HUMAN_OK -- Rejected --> DENY
+  HUMAN_OK -- Invalid or incomplete --> REWORK
+  HUMAN_OK -- Approved --> EXEC_PLAN
+
+  EXEC_PLAN --> RUNTIME_GATE --> GATE_OK
+  GATE_OK -- No, correctable --> REWORK
+  GATE_OK -- No, prohibited --> DENY
+  GATE_OK -- Yes --> EXECUTE --> PROVIDER --> VALIDATE --> RESULT_OK
+
+  RESULT_OK -- Yes --> COMMIT --> OBSERVE --> OUTCOME --> END
+  RESULT_OK -- No --> ROLLBACK --> OBSERVE
+  ROLLBACK --> REWORK
+
+  %% Audit evidence is mandatory at every material governance boundary.
+  CONTEXT -. context evidence .-> AUDIT
+  RESOLVE -. resolution evidence .-> AUDIT
+  POLICY -. policy decision .-> AUDIT
+  RISK -. risk decision .-> AUDIT
+  BUDGET -. budget decision .-> AUDIT
+  HUMAN -. human decision .-> AUDIT
+  RUNTIME_GATE -. gate decision .-> AUDIT
+  EXECUTE -. step attempts and side effects .-> AUDIT
+  VALIDATE -. validation evidence .-> AUDIT
+  COMMIT -. state and event evidence .-> AUDIT
+  ROLLBACK -. compensation evidence .-> AUDIT
+  OBSERVE -. telemetry correlation .-> AUDIT
+  OUTCOME -. outcome evidence .-> AUDIT
+  DENY -. denial reason .-> AUDIT
+  REWORK -. remediation reason .-> AUDIT
+  ESCALATE -. escalation reason .-> AUDIT
+
+  %% Governance invariants
+  INV1["Invariant 1\nPolicy, risk and budget checks occur before material side effects"]:::evidence
+  INV2["Invariant 2\nProduct acceptance remains human-exclusive"]:::evidence
+  INV3["Invariant 3\nEvery side effect is idempotent, attributable and auditable"]:::evidence
+  INV4["Invariant 4\nFailures fail closed and invoke rollback or quarantine"]:::evidence
+  INV5["Invariant 5\nAI cannot increase its own authority"]:::evidence
+
+  INV1 -. constrains .-> RUNTIME_GATE
+  INV2 -. constrains .-> HUMAN
+  INV3 -. constrains .-> EXECUTE
+  INV4 -. constrains .-> ROLLBACK
+  INV5 -. constrains .-> AUTH
