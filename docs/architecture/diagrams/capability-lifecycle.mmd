@@ -1,0 +1,151 @@
+%% ACOS Capability Lifecycle
+%% Architecture Chapter: 1.1 Enterprise Capability Architecture
+%% Status: canonical
+%%
+%% This state machine defines the governed lifecycle for every registered
+%% enterprise capability. A capability may only advance when the required
+%% evidence, ownership, architecture, governance and operational controls are
+%% complete. Transitions are auditable and fail closed.
+
+stateDiagram-v2
+  direction LR
+
+  [*] --> Proposed
+
+  Proposed --> ArchitectureReview: concept registered\nowner and purpose assigned
+  Proposed --> Rejected: insufficient strategic fit
+
+  ArchitectureReview --> Approved: architecture decision accepted\nADR linked\ndomain boundaries confirmed
+  ArchitectureReview --> Proposed: revision required
+  ArchitectureReview --> Rejected: violates constitution or architecture
+
+  Approved --> Planned: roadmap priority and funding assigned
+  Approved --> Deprecated: no longer strategically required
+
+  Planned --> Implementing: implementation authorized\nacceptance criteria baselined
+  Planned --> Approved: planning assumptions invalidated
+
+  Implementing --> Validated: schema, registry, security and CI checks pass
+  Implementing --> Planned: implementation reset or redesigned
+  Implementing --> Deprecated: implementation abandoned by governance decision
+
+  Validated --> Operational: release authorized\nrunbook, telemetry and rollback verified
+  Validated --> Implementing: validation failure or material defect
+
+  Operational --> Observed: production evidence accumulated\nSLOs and controls measured
+  Operational --> RolledBack: material operational or governance failure
+  Operational --> Deprecated: replacement or retirement approved
+
+  Observed --> Improving: improvement hypothesis approved
+  Observed --> Operational: no material change required
+  Observed --> Deprecated: value, risk or duplication threshold breached
+
+  Improving --> Validated: changed capability revalidated
+  Improving --> Operational: non-material operational tuning completed
+  Improving --> RolledBack: improvement introduces unacceptable risk
+
+  RolledBack --> Implementing: corrective implementation authorized
+  RolledBack --> Deprecated: recovery not viable or capability superseded
+
+  Deprecated --> Retired: consumers migrated\ndata and obligations resolved\nretirement evidence complete
+  Deprecated --> Improving: deprecation reversed by governance decision
+
+  Retired --> [*]
+  Rejected --> [*]
+
+  note right of Proposed
+    Required evidence:
+    - unique capability ID
+    - purpose and scope
+    - business and technical owner
+    - initial criticality
+    - strategic rationale
+  end note
+
+  note right of ArchitectureReview
+    Mandatory controls:
+    - constitutional alignment
+    - domain ownership review
+    - dependency analysis
+    - event and data boundary review
+    - security classification
+    - ADR linkage
+  end note
+
+  note right of Approved
+    Approval means architecture acceptance,
+    not permission for runtime side effects.
+  end note
+
+  note right of Planned
+    Required planning artifacts:
+    - delivery plan
+    - budget and exposure allocation
+    - acceptance criteria
+    - rollout and rollback strategy
+    - implementation references
+  end note
+
+  note right of Implementing
+    Implementation remains non-operational
+    until all validation gates pass.
+  end note
+
+  note right of Validated
+    Validation gates:
+    - registry schema validation
+    - dependency resolution
+    - cycle detection
+    - policy traceability
+    - security validation
+    - test and CI evidence
+    - implementation readiness review
+  end note
+
+  note right of Operational
+    Operational entry criteria:
+    - release authorization
+    - observability coverage
+    - runbook and ownership readiness
+    - recovery objectives verified
+    - audit correlation enabled
+  end note
+
+  note right of Observed
+    Evidence reviewed:
+    - business outcomes
+    - SLO and reliability results
+    - policy exceptions
+    - security findings
+    - human intervention rate
+    - cost and exposure
+  end note
+
+  note right of Improving
+    Every material change re-enters
+    validation before operational use.
+  end note
+
+  note right of Deprecated
+    Deprecation requires:
+    - replacement or shutdown plan
+    - consumer migration plan
+    - data retention decision
+    - policy and contract impact review
+    - target retirement date
+  end note
+
+  note right of Retired
+    Retirement is irreversible unless a
+    new capability version is proposed.
+    Historical audit evidence is retained.
+  end note
+
+  note left of RolledBack
+    Rollback triggers include:
+    - policy violation
+    - material security risk
+    - failed acceptance criteria
+    - unacceptable business impact
+    - loss of auditability
+  end note
