@@ -1,0 +1,145 @@
+version: 1.0.0
+registry_id: acos.enterprise.governance
+status: active
+default_effect: deny
+conflict_resolution: explicit_deny
+
+authority_levels:
+  - id: operational
+    rank: 10
+    description: Reversible operational decisions within delegated scope.
+  - id: managerial
+    rank: 20
+    description: Material domain decisions and bounded financial commitments.
+  - id: executive
+    rank: 30
+    description: Cross-enterprise, critical or irreversible decisions.
+
+risk_tiers:
+  - id: low
+    score_min: 1
+    score_max: 4
+    approval_mode: automated
+  - id: moderate
+    score_min: 5
+    score_max: 9
+    approval_mode: accountable_owner
+  - id: high
+    score_min: 10
+    score_max: 16
+    approval_mode: independent_approval
+  - id: critical
+    score_min: 17
+    score_max: 25
+    approval_mode: quorum
+
+policies:
+  - id: GOV-POL-001
+    name: Fail closed on unresolved governance context
+    owner_domain: governance.policy
+    version: 1.0.0
+    status: active
+    priority: 1000
+    scope:
+      actions: ['*']
+      environments: [production]
+    effect: deny
+    condition: governance_context_complete == false
+    evidence_required: [identity, action, resource, policy_versions]
+
+  - id: GOV-POL-002
+    name: Independent approval for high-risk irreversible actions
+    owner_domain: governance.approval
+    version: 1.0.0
+    status: active
+    priority: 900
+    scope:
+      actions: ['*']
+      environments: [production]
+    effect: require_approval
+    condition: risk_tier in ['high', 'critical'] and reversibility == 'irreversible'
+    approval_requirement: high-risk-independent
+    evidence_required: [risk_assessment, recovery_plan, execution_deadline]
+
+  - id: GOV-POL-003
+    name: Reserve budget before financial commitment
+    owner_domain: governance.budget
+    version: 1.0.0
+    status: active
+    priority: 850
+    scope:
+      actions: [spend.commit, contract.execute, campaign.launch, supplier.order]
+      environments: [production]
+    effect: require_control
+    condition: financial_commitment == true
+    controls_required: [valid_budget_reservation]
+    evidence_required: [cost_center, currency, amount, reservation_id]
+
+  - id: GOV-POL-004
+    name: Prevent conflicting self-approval
+    owner_domain: governance.approval
+    version: 1.0.0
+    status: active
+    priority: 950
+    scope:
+      actions: ['*']
+      environments: [production]
+    effect: deny
+    condition: segregation_required == true and requestor_id == approver_id
+    evidence_required: [requestor_identity, approver_identity, duty_roles]
+
+approval_requirements:
+  - id: standard-owner
+    risk_tiers: [moderate]
+    minimum_authority: managerial
+    quorum: 1
+    independent_from_requestor: false
+    sequence: [domain_owner]
+    expires_after_minutes: 1440
+
+  - id: high-risk-independent
+    risk_tiers: [high]
+    minimum_authority: managerial
+    quorum: 1
+    independent_from_requestor: true
+    sequence: [domain_owner, independent_governance_approver]
+    expires_after_minutes: 480
+
+  - id: critical-quorum
+    risk_tiers: [critical]
+    minimum_authority: executive
+    quorum: 2
+    independent_from_requestor: true
+    sequence: [domain_owner, risk_owner, executive_approver]
+    expires_after_minutes: 240
+
+budget_controls:
+  reservation_required_actions: [spend.commit, contract.execute, campaign.launch, supplier.order]
+  overcommit_allowed: false
+  reservation_expiry_minutes: 1440
+  reconciliation_required: true
+  emergency_exception_policy: GOV-POL-001
+
+exception_policy:
+  maximum_duration_days: 90
+  owner_required: true
+  compensating_controls_required: true
+  automatic_renewal: false
+  review_before_expiry_days: 14
+
+required_audit_fields:
+  - decision_id
+  - correlation_id
+  - subject_id
+  - action
+  - resource
+  - policy_versions
+  - evaluated_facts
+  - decision_effect
+  - reason
+  - risk_tier
+  - authority_grants
+  - approvals
+  - budget_state
+  - decided_at
+  - expires_at
