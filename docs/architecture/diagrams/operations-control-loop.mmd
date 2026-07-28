@@ -1,0 +1,26 @@
+flowchart LR
+    A[Observe service health] --> B{SLO or control breach?}
+    B -- No --> C[Continue normal operations]
+    C --> A
+    B -- Yes --> D[Classify severity and blast radius]
+    D --> E[Assign incident command]
+    E --> F[Contain and stabilize]
+    F --> G[Recover service]
+    G --> H[Verify business and technical health]
+    H --> I[Close incident]
+    I --> J[Post-incident review]
+    J --> K[Problem record and corrective actions]
+    K --> L[Change, automate or redesign]
+    L --> M[Validate in controlled deployment]
+    M --> A
+
+    N[Change request] --> O[Risk and reversibility assessment]
+    O --> P{Approved class?}
+    P -- No --> Q[Reject or redesign]
+    P -- Yes --> R[Deploy progressively]
+    R --> S[Post-deployment verification]
+    S --> A
+
+    T[Continuity exercise] --> U[Test people, permissions, data and dependencies]
+    U --> V[Record gaps and actions]
+    V --> K
