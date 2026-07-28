@@ -1,0 +1,22 @@
+flowchart LR
+    U[User or System Request] --> I[Identity and Context]
+    I --> P[Policy and Risk Evaluation]
+    P -->|Denied| X[Block or Escalate]
+    P -->|Allowed| A[Agent Orchestrator]
+    A --> R[Model Router]
+    R --> M[Approved Model]
+    A --> K[Knowledge Retrieval]
+    K --> S[Governed Sources]
+    A --> T[Tool Authorization]
+    T --> G[Governed Tools]
+    M --> V[Output Validation]
+    S --> V
+    G --> V
+    V --> E[Evaluation and Safety Gates]
+    E -->|Pass| O[Response or Governed Action]
+    E -->|Fail| X
+    A --> C[Memory Controller]
+    C --> D[Classified Memory Stores]
+    A --> B[Telemetry and Cost Controls]
+    O --> B
+    X --> B
