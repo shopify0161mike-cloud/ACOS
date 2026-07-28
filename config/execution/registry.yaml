@@ -1,0 +1,145 @@
+registry_version: 1.0.0
+architecture_chapter: '1.3'
+status: canonical
+owner_domain: DOM-PLT-RUN-001
+owner_capability: CAP-PLT-RUN-001
+
+states:
+  - id: EXE-STA-PLANNED
+    terminal: false
+  - id: EXE-STA-AUTHORIZING
+    terminal: false
+  - id: EXE-STA-READY
+    terminal: false
+  - id: EXE-STA-RUNNING
+    terminal: false
+  - id: EXE-STA-WAITING
+    terminal: false
+  - id: EXE-STA-COMPENSATING
+    terminal: false
+  - id: EXE-STA-SUCCEEDED
+    terminal: true
+  - id: EXE-STA-FAILED
+    terminal: true
+  - id: EXE-STA-CANCELLED
+    terminal: true
+  - id: EXE-STA-MANUAL_INTERVENTION
+    terminal: true
+
+transitions:
+  - from: EXE-STA-PLANNED
+    to: EXE-STA-AUTHORIZING
+    trigger: execution.authorization_started.v1
+  - from: EXE-STA-AUTHORIZING
+    to: EXE-STA-READY
+    trigger: execution.authorization_granted.v1
+  - from: EXE-STA-AUTHORIZING
+    to: EXE-STA-FAILED
+    trigger: execution.authorization_denied.v1
+  - from: EXE-STA-READY
+    to: EXE-STA-RUNNING
+    trigger: execution.started.v1
+  - from: EXE-STA-RUNNING
+    to: EXE-STA-WAITING
+    trigger: execution.wait_requested.v1
+  - from: EXE-STA-WAITING
+    to: EXE-STA-RUNNING
+    trigger: execution.resumed.v1
+  - from: EXE-STA-RUNNING
+    to: EXE-STA-SUCCEEDED
+    trigger: execution.completed.v1
+  - from: EXE-STA-RUNNING
+    to: EXE-STA-COMPENSATING
+    trigger: execution.compensation_started.v1
+  - from: EXE-STA-COMPENSATING
+    to: EXE-STA-FAILED
+    trigger: execution.compensation_completed.v1
+  - from: EXE-STA-COMPENSATING
+    to: EXE-STA-MANUAL_INTERVENTION
+    trigger: execution.compensation_failed.v1
+  - from: EXE-STA-PLANNED
+    to: EXE-STA-CANCELLED
+    trigger: execution.cancelled.v1
+  - from: EXE-STA-READY
+    to: EXE-STA-CANCELLED
+    trigger: execution.cancelled.v1
+  - from: EXE-STA-WAITING
+    to: EXE-STA-CANCELLED
+    trigger: execution.cancelled.v1
+
+retry_policies:
+  - id: RETRY-TRANSIENT-DEFAULT
+    failure_classes: [transient_provider, throttling, network_timeout]
+    max_attempts: 5
+    strategy: exponential_backoff
+    initial_delay_seconds: 2
+    max_delay_seconds: 120
+    jitter: full
+    deadline_seconds: 900
+  - id: RETRY-CONCURRENCY
+    failure_classes: [optimistic_concurrency]
+    max_attempts: 3
+    strategy: bounded_linear
+    initial_delay_seconds: 1
+    max_delay_seconds: 5
+    jitter: equal
+    deadline_seconds: 30
+
+failure_classes:
+  - id: transient_provider
+    retryable: true
+    compensation_required: false
+  - id: throttling
+    retryable: true
+    compensation_required: false
+  - id: network_timeout
+    retryable: true
+    compensation_required: false
+  - id: optimistic_concurrency
+    retryable: true
+    compensation_required: false
+  - id: policy_denied
+    retryable: false
+    compensation_required: false
+  - id: budget_denied
+    retryable: false
+    compensation_required: false
+  - id: authentication_failed
+    retryable: false
+    compensation_required: false
+  - id: invariant_violation
+    retryable: false
+    compensation_required: true
+  - id: irreversible_side_effect_unknown
+    retryable: false
+    compensation_required: true
+  - id: compensation_failed
+    retryable: false
+    compensation_required: false
+
+compensation_definitions:
+  - id: CMP-PROVIDER-OPERATION
+    applies_to: provider_operation
+    reversibility: conditionally_reversible
+    command: compensate_provider_operation
+    timeout_seconds: 300
+    failure_terminal_state: EXE-STA-MANUAL_INTERVENTION
+  - id: CMP-BUDGET-RESERVATION
+    applies_to: budget_reservation
+    reversibility: reversible
+    command: release_budget_reservation
+    timeout_seconds: 60
+    failure_terminal_state: EXE-STA-MANUAL_INTERVENTION
+  - id: CMP-EXTERNAL-PUBLICATION
+    applies_to: external_publication
+    reversibility: conditionally_reversible
+    command: withdraw_external_publication
+    timeout_seconds: 300
+    failure_terminal_state: EXE-STA-MANUAL_INTERVENTION
+
+governance_invariants:
+  - Terminal execution states cannot transition to another state.
+  - Material side effects require policy, identity, budget and audit correlation before execution.
+  - Retries must reuse the original idempotency key and correlation identifier.
+  - Unknown outcomes after irreversible side effects require reconciliation or manual intervention.
+  - Compensation failure must not be hidden by marking the execution as successfully completed.
