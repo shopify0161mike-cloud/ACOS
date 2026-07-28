@@ -1,0 +1,28 @@
+stateDiagram-v2
+    [*] --> received
+    received --> validating
+    validating --> governance_pending
+    validating --> failed: invalid command
+    governance_pending --> approval_pending: approval required
+    governance_pending --> scheduled: authorized
+    governance_pending --> failed: denied or expired
+    approval_pending --> scheduled: approved
+    approval_pending --> cancelled: rejected or expired
+    scheduled --> running
+    running --> waiting: external or domain wait
+    running --> retry_scheduled: retryable failure
+    running --> compensating: forward failure
+    running --> succeeded: all steps complete
+    waiting --> running: signal or timer
+    waiting --> retry_scheduled: retryable timeout
+    retry_scheduled --> running: backoff elapsed
+    retry_scheduled --> failed: attempts exhausted
+    compensating --> compensated: compensation complete
+    compensating --> manual_intervention_required: compensation failed
+    running --> cancelled: authorized cancellation
+    running --> manual_intervention_required: unsafe or uncertain state
+    failed --> [*]
+    succeeded --> [*]
+    compensated --> [*]
+    cancelled --> [*]
+    manual_intervention_required --> [*]
