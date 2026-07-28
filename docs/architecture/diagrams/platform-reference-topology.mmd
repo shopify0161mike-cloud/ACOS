@@ -1,0 +1,68 @@
+flowchart TB
+  subgraph Edge[Edge and Access Plane]
+    WAF[Edge Gateway / WAF]
+    API[API Gateway]
+  end
+
+  subgraph Trust[Identity and Policy Plane]
+    ID[Identity Broker]
+    PDP[Policy Decision Service]
+    SEC[Secrets and Key Management]
+  end
+
+  subgraph Runtime[Application Runtime Plane]
+    SVC[Domain Services]
+    JOB[Workers and Scheduled Jobs]
+    WF[Durable Workflow Runtime]
+  end
+
+  subgraph Integration[Messaging and Integration Plane]
+    BUS[Event Backbone]
+    DLQ[Dead-Letter and Replay]
+    ACL[Provider Gateways / ACLs]
+  end
+
+  subgraph Data[Data Plane]
+    TX[Transactional Stores]
+    OBJ[Object Storage]
+    CACHE[Cache and Coordination]
+    ANALYTICS[Analytics and Read Models]
+  end
+
+  subgraph Ops[Observability and Audit Plane]
+    TEL[Telemetry Platform]
+    AUDIT[Immutable Audit Evidence]
+    IR[Alerting and Incident Response]
+  end
+
+  subgraph Delivery[Delivery and Control Plane]
+    SCM[Source and Build]
+    ART[Signed Artifact Registry]
+    DEPLOY[Progressive Delivery]
+  end
+
+  WAF --> API
+  API --> ID
+  API --> PDP
+  API --> SVC
+  ID --> SVC
+  PDP --> SVC
+  SEC --> SVC
+  SVC --> WF
+  SVC --> BUS
+  WF --> BUS
+  BUS --> DLQ
+  BUS --> ACL
+  SVC --> TX
+  SVC --> OBJ
+  SVC --> CACHE
+  BUS --> ANALYTICS
+  SVC --> TEL
+  WF --> TEL
+  BUS --> TEL
+  PDP --> AUDIT
+  DEPLOY --> AUDIT
+  TEL --> IR
+  SCM --> ART
+  ART --> DEPLOY
+  DEPLOY --> Runtime
