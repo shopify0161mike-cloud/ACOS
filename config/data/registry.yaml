@@ -1,0 +1,135 @@
+version: 1.0.0
+architecture: enterprise-data
+classifications:
+  - id: public
+    description: Approved for public disclosure.
+  - id: internal
+    description: Internal operational information.
+  - id: confidential
+    description: Sensitive business or personal information.
+  - id: restricted
+    description: Highly sensitive regulated or security-critical information.
+data_products:
+  - id: capability-registry
+    name: Capability Registry
+    domain: enterprise-architecture
+    purpose: Authoritative catalog of enterprise capabilities and lifecycle metadata.
+    business_owner: enterprise-architecture
+    technical_owner: platform-architecture
+    data_steward: architecture-governance
+    classification: internal
+    lifecycle_state: active
+    authoritative_source: config/capabilities/registry.yaml
+    storage_class: configuration-repository
+    contract_version: 1.0.0
+    compatibility: backward
+    quality_objectives:
+      completeness_percent: 100
+      validity_percent: 100
+      freshness_hours: 24
+      availability_percent: 99.9
+    retention:
+      policy: retain-while-authoritative
+      period_days: 2555
+      deletion_mode: governed
+    lineage:
+      sources:
+        - enterprise-architecture-governance
+      transformations:
+        - schema-validation
+      consumers:
+        - architecture-validation
+        - governance-decisioning
+    security_controls:
+      encryption_at_rest: true
+      encryption_in_transit: true
+      masking_required: false
+      access_policy: architecture-maintainers
+    recovery:
+      rpo_hours: 24
+      rto_hours: 8
+      backup_class: repository-history
+
+  - id: canonical-event-registry
+    name: Canonical Event Registry
+    domain: domain-architecture
+    purpose: Authoritative event contracts exchanged between ACOS domains.
+    business_owner: domain-architecture
+    technical_owner: integration-platform
+    data_steward: event-governance
+    classification: internal
+    lifecycle_state: active
+    authoritative_source: config/events/registry.yaml
+    storage_class: configuration-repository
+    contract_version: 1.0.0
+    compatibility: backward
+    quality_objectives:
+      completeness_percent: 100
+      validity_percent: 100
+      freshness_hours: 24
+      availability_percent: 99.9
+    retention:
+      policy: retain-contract-history
+      period_days: 2555
+      deletion_mode: governed
+    lineage:
+      sources:
+        - domain-owners
+      transformations:
+        - schema-validation
+        - compatibility-validation
+      consumers:
+        - event-producers
+        - event-consumers
+        - architecture-validation
+    security_controls:
+      encryption_at_rest: true
+      encryption_in_transit: true
+      masking_required: false
+      access_policy: architecture-maintainers
+    recovery:
+      rpo_hours: 24
+      rto_hours: 8
+      backup_class: repository-history
+
+  - id: agent-knowledge-index
+    name: Agent Knowledge Index
+    domain: intelligence
+    purpose: Governed searchable representation of approved enterprise knowledge for agent retrieval.
+    business_owner: intelligence-governance
+    technical_owner: intelligence-platform
+    data_steward: knowledge-governance
+    classification: confidential
+    lifecycle_state: active
+    authoritative_source: approved-knowledge-sources
+    storage_class: vector-store
+    contract_version: 1.0.0
+    compatibility: backward
+    quality_objectives:
+      completeness_percent: 98
+      validity_percent: 99
+      freshness_hours: 24
+      availability_percent: 99.5
+    retention:
+      policy: source-aligned-retention
+      period_days: 365
+      deletion_mode: cascading
+    lineage:
+      sources:
+        - approved-enterprise-documents
+      transformations:
+        - content-normalization
+        - chunking
+        - embedding-generation
+      consumers:
+        - governed-agents
+        - semantic-search
+    security_controls:
+      encryption_at_rest: true
+      encryption_in_transit: true
+      masking_required: true
+      access_policy: authorized-agent-identities
+    recovery:
+      rpo_hours: 24
+      rto_hours: 12
+      backup_class: rebuildable-index
