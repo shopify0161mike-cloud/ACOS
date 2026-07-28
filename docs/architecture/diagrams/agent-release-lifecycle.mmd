@@ -1,0 +1,11 @@
+stateDiagram-v2
+    [*] --> Draft
+    Draft --> Evaluation: owner and controls defined
+    Evaluation --> Approved: quality and safety gates pass
+    Evaluation --> Draft: remediation required
+    Approved --> Active: authorized release
+    Active --> Suspended: incident or policy breach
+    Suspended --> Evaluation: remediation completed
+    Active --> Retired: replacement or end of life
+    Approved --> Retired: cancelled before release
+    Retired --> [*]
