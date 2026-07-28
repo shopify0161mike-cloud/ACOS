@@ -1,0 +1,35 @@
+flowchart LR
+    U[Human Users] --> IDP[Enterprise Identity Provider]
+    W[Workloads and Services] --> WI[Workload Identity]
+    A[AI Agents] --> AIAM[Agent Identity and Policy]
+
+    IDP --> PDP[Policy Decision Point]
+    WI --> PDP
+    AIAM --> PDP
+
+    PDP --> PEP[Policy Enforcement Points]
+    PEP --> EDGE[Edge and API Gateway]
+    PEP --> SVC[Domain Services]
+    PEP --> TOOL[Approved Agent Tools]
+    PEP --> DATA[Governed Data Stores]
+
+    EDGE --> MESH[Service Mesh and mTLS]
+    MESH --> SVC
+    SVC --> DATA
+    TOOL --> EXT[External Providers]
+
+    VAULT[Secrets and Key Management] --> EDGE
+    VAULT --> SVC
+    VAULT --> TOOL
+    VAULT --> DATA
+
+    EDGE --> AUDIT[Immutable Audit and Security Telemetry]
+    SVC --> AUDIT
+    TOOL --> AUDIT
+    DATA --> AUDIT
+    PDP --> AUDIT
+
+    AUDIT --> SIEM[Detection and Response]
+    SIEM --> IR[Incident Response]
+    IR --> GOV[Security Governance and Risk]
+    GOV --> PDP
