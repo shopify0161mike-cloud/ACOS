@@ -1,0 +1,24 @@
+flowchart TD
+    A[Governed command received] --> B[Resolve identity, action and resource]
+    B --> C{Governance context complete?}
+    C -- No --> X[Deny and audit]
+    C -- Yes --> D[Load policies and authority grants]
+    D --> E[Classify risk]
+    E --> F{Policy conflict or explicit deny?}
+    F -- Yes --> X
+    F -- No --> G{Approval required?}
+    G -- Yes --> H[Create approval request]
+    H --> I{Quorum, sequence and segregation satisfied?}
+    I -- No --> J[Wait, reject or expire]
+    J --> X
+    I -- Yes --> K{Financial commitment?}
+    G -- No --> K
+    K -- Yes --> L[Reserve budget]
+    L --> M{Reservation valid?}
+    M -- No --> X
+    M -- Yes --> N[Issue time-bound decision token]
+    K -- No --> N
+    N --> O[Execute governed action]
+    O --> P[Reconcile outcome and budget]
+    P --> Q[Append immutable audit evidence]
+    Q --> R[Publish governance outcome events]
