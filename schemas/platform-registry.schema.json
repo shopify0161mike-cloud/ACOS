@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://acos.enterprise/schemas/platform-registry.schema.json",
+  "title": "ACOS Platform Registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "services"],
+  "properties": {
+    "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "services": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/service"}
+    }
+  },
+  "$defs": {
+    "service": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "name", "category", "owner", "criticality", "status",
+        "environments", "capabilities", "data_classification",
+        "availability_slo", "rto_minutes", "rpo_minutes", "scaling_mode",
+        "deployment_strategy", "dependencies", "controls", "degradation_mode",
+        "backup_policy", "recovery_test_frequency_days"
+      ],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+        "name": {"type": "string", "minLength": 3},
+        "category": {"enum": ["identity", "governance", "runtime", "messaging", "data", "observability", "delivery", "security", "networking"]},
+        "owner": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+        "criticality": {"enum": ["tier-0", "tier-1", "tier-2", "tier-3"]},
+        "status": {"enum": ["proposed", "active", "deprecated", "retired"]},
+        "environments": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"enum": ["development", "test", "staging", "production"]}
+        },
+        "capabilities": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"}
+        },
+        "data_classification": {"enum": ["public", "internal", "confidential", "restricted"]},
+        "availability_slo": {"type": "number", "minimum": 0, "maximum": 100},
+        "rto_minutes": {"type": "integer", "minimum": 0},
+        "rpo_minutes": {"type": "integer", "minimum": 0},
+        "scaling_mode": {"enum": ["none", "vertical", "horizontal", "partitioned"]},
+        "deployment_strategy": {"enum": ["rolling", "blue-green", "canary", "recreate"]},
+        "dependencies": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"}
+        },
+        "controls": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["authentication", "authorization", "encryption_in_transit", "encryption_at_rest", "audit_logging", "secret_source"],
+          "properties": {
+            "authentication": {"enum": ["required"]},
+            "authorization": {"enum": ["deny-by-default", "least-privilege", "separation-of-duties"]},
+            "encryption_in_transit": {"enum": ["required"]},
+            "encryption_at_rest": {"enum": ["required"]},
+            "audit_logging": {"enum": ["required"]},
+            "secret_source": {"enum": ["managed-vault", "workload-identity"]}
+          }
+        },
+        "degradation_mode": {"type": "string", "minLength": 3},
+        "backup_policy": {"type": "string", "minLength": 3},
+        "recovery_test_frequency_days": {"type": "integer", "minimum": 1, "maximum": 365}
+      }
+    }
+  }
+}
