@@ -1,0 +1,76 @@
+version: 1.0.0
+agents:
+  - id: enterprise-orchestrator
+    name: Enterprise Orchestrator
+    owner: platform-engineering
+    status: draft
+    risk_class: high
+    purpose: Coordinate governed multi-step enterprise workflows.
+    model_policy: balanced-enterprise
+    prompt_policy: enterprise-orchestrator-v1
+    tool_scopes:
+      - read:knowledge
+      - execute:governed-workflow
+    knowledge_sources:
+      - enterprise-architecture
+    memory_policy: restricted-working-memory
+    evaluation_suite: enterprise-agent-baseline
+    approval_required_for:
+      - irreversible_action
+      - external_commitment
+    observability_profile: full-trace
+model_policies:
+  - id: balanced-enterprise
+    allowed_providers:
+      - openai
+    required_capabilities:
+      - text
+      - tool_use
+      - structured_output
+    max_latency_ms: 30000
+    max_cost_usd_per_run: 2.00
+    fallback_policy: same-or-lower-risk
+    data_classifications:
+      - public
+      - internal
+prompt_policies:
+  - id: enterprise-orchestrator-v1
+    version: 1.0.0
+    status: draft
+    owner: platform-engineering
+    change_control: evaluation-required
+memory_policies:
+  - id: restricted-working-memory
+    classes:
+      - session
+      - working
+    retention_hours: 24
+    permitted_classifications:
+      - public
+      - internal
+    persistence: encrypted
+    deletion: automatic
+knowledge_sources:
+  - id: enterprise-architecture
+    owner: enterprise-architecture
+    classification: internal
+    freshness_sla_hours: 24
+    provenance_required: true
+    access_policy: architecture-readers
+evaluation_suites:
+  - id: enterprise-agent-baseline
+    owner: ai-governance
+    required_metrics:
+      correctness: 0.90
+      grounding: 0.95
+      policy_compliance: 1.00
+      tool_accuracy: 0.95
+    release_gate: all-thresholds-pass
+observability_profiles:
+  - id: full-trace
+    record_prompt_version: true
+    record_model_policy: true
+    record_tool_calls: true
+    record_sources: true
+    record_cost: true
+    record_policy_decisions: true
