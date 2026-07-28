@@ -1,0 +1,63 @@
+flowchart LR
+  subgraph INT[Intelligence]
+    MKTINT[Market Intelligence]
+    EXEC[Executive Coordination]
+  end
+
+  subgraph COM[Commerce]
+    PROD[Product]
+    SUP[Supplier]
+    FIN[Commerce Finance]
+    BRAND[Brand]
+    MKT[Marketing]
+    ORD[Orders]
+    FUL[Fulfillment]
+  end
+
+  subgraph GOV[Governance]
+    POL[Policy]
+    RISK[Risk]
+    BUD[Budget Governance]
+    APR[Approval]
+    AUD[Audit]
+  end
+
+  subgraph PLT[Platform]
+    IDN[Identity]
+    RUN[Runtime]
+    EVT[Enterprise Events]
+    INTG[Provider Integration]
+    KNW[Knowledge]
+  end
+
+  KNW -->|governed evidence| MKTINT
+  MKTINT -->|opportunity event| PROD
+  SUP -->|qualification event| PROD
+  FIN -->|unit economics event| BUD
+  PROD -->|acceptance request| APR
+  POL -->|policy decision| RISK
+  POL -->|policy decision| APR
+  RISK -->|risk assessment| APR
+  IDN -->|identity evidence| APR
+  APR -->|accepted or rejected| PROD
+  PROD -->|accepted product| BRAND
+  BRAND -->|brand contract| MKT
+  BUD -->|budget decision| MKT
+  ORD -->|order captured| FUL
+  EXEC -->|governed plan| RUN
+  POL -->|authorization| RUN
+  BUD -->|authorization| RUN
+  IDN -->|workload identity| RUN
+  RUN -->|publish and replay| EVT
+  RUN -->|canonical provider command| INTG
+  INTG -->|normalized operation events| SUP
+  INTG -->|normalized operation events| ORD
+  INTG -->|normalized operation events| FUL
+
+  AUD -. append-only evidence .- PROD
+  AUD -. append-only evidence .- APR
+  AUD -. append-only evidence .- RUN
+  AUD -. append-only evidence .- INTG
+
+  EXT[(External providers)]
+  INTG -->|anti-corruption layers| EXT
