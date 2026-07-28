@@ -1,0 +1,341 @@
+registry_version: 1.0.0
+architecture_chapter: '1.2'
+status: canonical
+
+events:
+  - name: product.candidate_discovered.v1
+    producer_domain: DOM-COM-PRO-001
+    description: A governed product candidate has been discovered and recorded.
+    delivery: at_least_once
+    retention: operational
+    schema_fields:
+      - {name: product_candidate_id, type: uuid, required: true, description: Stable product candidate identifier, classification: internal}
+      - {name: evidence_ref, type: string, required: true, description: Reference to retained discovery evidence, classification: internal}
+      - {name: discovered_at, type: timestamp, required: true, description: Discovery timestamp, classification: internal}
+    consumers: []
+    compatibility: backward
+    contains_personal_data: false
+    status: approved
+
+  - name: product.validation_completed.v1
+    producer_domain: DOM-COM-PRO-001
+    description: Product qualification has completed with evidence and an outcome.
+    delivery: at_least_once
+    retention: audit
+    schema_fields:
+      - {name: product_candidate_id, type: uuid, required: true, description: Product candidate identifier, classification: internal}
+      - {name: outcome, type: string, required: true, description: Qualification outcome, classification: internal}
+      - {name: confidence, type: number, required: true, description: Recorded confidence score, classification: internal}
+    consumers: []
+    compatibility: backward
+    contains_personal_data: false
+    status: approved
+
+  - name: approval.product_acceptance_requested.v1
+    producer_domain: DOM-COM-PRO-001
+    description: A product evidence package has been submitted for human acceptance.
+    delivery: at_least_once
+    retention: audit
+    schema_fields:
+      - {name: request_id, type: uuid, required: true, description: Approval request identifier, classification: internal}
+      - {name: product_candidate_id, type: uuid, required: true, description: Product candidate identifier, classification: internal}
+      - {name: evidence_package_ref, type: string, required: true, description: Immutable evidence package reference, classification: confidential}
+    consumers: [DOM-GOV-APR-001]
+    compatibility: backward
+    contains_personal_data: false
+    status: approved
+
+  - name: approval.product_accepted.v1
+    producer_domain: DOM-GOV-APR-001
+    description: An authenticated human authority accepted a product.
+    delivery: at_least_once
+    retention: permanent
+    schema_fields:
+      - {name: approval_id, type: uuid, required: true, description: Durable approval identifier, classification: restricted}
+      - {name: product_candidate_id, type: uuid, required: true, description: Accepted product candidate identifier, classification: internal}
+      - {name: authority_id, type: string, required: true, description: Authenticated approving authority, classification: restricted}
+      - {name: decided_at, type: timestamp, required: true, description: Decision timestamp, classification: internal}
+    consumers: [DOM-COM-PRO-001, DOM-COM-BRA-001]
+    compatibility: full
+    contains_personal_data: true
+    status: approved
+
+  - name: approval.product_rejected.v1
+    producer_domain: DOM-GOV-APR-001
+    description: An authenticated human authority rejected a product.
+    delivery: at_least_once
+    retention: permanent
+    schema_fields:
+      - {name: approval_id, type: uuid, required: true, description: Durable approval identifier, classification: restricted}
+      - {name: product_candidate_id, type: uuid, required: true, description: Rejected product candidate identifier, classification: internal}
+      - {name: authority_id, type: string, required: true, description: Authenticated rejecting authority, classification: restricted}
+      - {name: reason, type: string, required: true, description: Recorded rejection rationale, classification: confidential}
+    consumers: [DOM-COM-PRO-001]
+    compatibility: full
+    contains_personal_data: true
+    status: approved
+
+  - name: supplier.qualification_completed.v1
+    producer_domain: DOM-COM-SUP-001
+    description: Supplier qualification completed with a governed result.
+    delivery: at_least_once
+    retention: audit
+    schema_fields:
+      - {name: supplier_id, type: uuid, required: true, description: Supplier identifier, classification: confidential}
+      - {name: outcome, type: string, required: true, description: Qualification outcome, classification: internal}
+      - {name: evidence_ref, type: string, required: true, description: Retained evidence reference, classification: confidential}
+    consumers: [DOM-COM-PRO-001]
+    compatibility: backward
+    contains_personal_data: false
+    status: approved
+
+  - name: finance.unit_economics_calculated.v1
+    producer_domain: DOM-COM-FIN-001
+    description: Deterministic unit economics were calculated for a commercial subject.
+    delivery: at_least_once
+    retention: audit
+    schema_fields:
+      - {name: calculation_id, type: uuid, required: true, description: Calculation identifier, classification: internal}
+      - {name: subject_id, type: string, required: true, description: Commercial subject identifier, classification: internal}
+      - {name: contribution_margin, type: money, required: true, description: Calculated contribution margin, classification: confidential}
+    consumers: [DOM-GOV-BUD-001]
+    compatibility: backward
+    contains_personal_data: false
+    status: approved
+
+  - name: brand.identity_generated.v1
+    producer_domain: DOM-COM-BRA-001
+    description: A governed brand identity version became available.
+    delivery: at_least_once
+    retention: operational
+    schema_fields:
+      - {name: brand_identity_id, type: uuid, required: true, description: Brand identity identifier, classification: internal}
+      - {name: version, type: string, required: true, description: Brand identity version, classification: internal}
+    consumers: [DOM-COM-MKT-001]
+    compatibility: backward
+    contains_personal_data: false
+    status: approved
+
+  - name: marketing.campaign_planned.v1
+    producer_domain: DOM-COM-MKT-001
+    description: A campaign plan was created within approved constraints.
+    delivery: at_least_once
+    retention: audit
+    schema_fields:
+      - {name: campaign_id, type: uuid, required: true, description: Campaign identifier, classification: internal}
+      - {name: budget_decision_id, type: uuid, required: true, description: Authorizing budget decision, classification: confidential}
+      - {name: brand_identity_id, type: uuid, required: true, description: Governing brand identity, classification: internal}
+    consumers: []
+    compatibility: backward
+    contains_personal_data: false
+    status: approved
+
+  - name: order.captured.v1
+    producer_domain: DOM-COM-ORD-001
+    description: An authoritative order was captured.
+    delivery: at_least_once
+    retention: audit
+    schema_fields:
+      - {name: order_id, type: uuid, required: true, description: Order identifier, classification: confidential}
+      - {name: captured_at, type: timestamp, required: true, description: Capture timestamp, classification: internal}
+      - {name: total, type: money, required: true, description: Authoritative order total, classification: confidential}
+    consumers: [DOM-COM-FUL-001]
+    compatibility: backward
+    contains_personal_data: true
+    status: approved
+
+  - name: order.state_changed.v1
+    producer_domain: DOM-COM-ORD-001
+    description: The authoritative order lifecycle state changed.
+    delivery: at_least_once
+    retention: audit
+    schema_fields:
+      - {name: order_id, type: uuid, required: true, description: Order identifier, classification: confidential}
+      - {name: previous_state, type: string, required: true, description: Previous order state, classification: internal}
+      - {name: current_state, type: string, required: true, description: New order state, classification: internal}
+    consumers: []
+    compatibility: backward
+    contains_personal_data: true
+    status: approved
+
+  - name: fulfillment.shipment_updated.v1
+    producer_domain: DOM-COM-FUL-001
+    description: Canonical shipment state was updated.
+    delivery: at_least_once
+    retention: operational
+    schema_fields:
+      - {name: fulfillment_case_id, type: uuid, required: true, description: Fulfillment case identifier, classification: confidential}
+      - {name: order_id, type: uuid, required: true, description: Related order identifier, classification: confidential}
+      - {name: shipment_state, type: string, required: true, description: Canonical shipment state, classification: internal}
+    consumers: []
+    compatibility: backward
+    contains_personal_data: true
+    status: approved
+
+  - name: market.opportunity_identified.v1
+    producer_domain: DOM-INT-MKT-001
+    description: Governed evidence produced a market opportunity hypothesis.
+    delivery: at_least_once
+    retention: audit
+    schema_fields:
+      - {name: opportunity_id, type: uuid, required: true, description: Opportunity identifier, classification: internal}
+      - {name: evidence_ref, type: string, required: true, description: Evidence reference, classification: internal}
+      - {name: confidence, type: number, required: true, description: Confidence score, classification: internal}
+    consumers: [DOM-COM-PRO-001, DOM-INT-EXE-001]
+    compatibility: backward
+    contains_personal_data: false
+    status: approved
+
+  - name: executive.plan_created.v1
+    producer_domain: DOM-INT-EXE-001
+    description: A governed enterprise execution plan was created.
+    delivery: at_least_once
+    retention: audit
+    schema_fields:
+      - {name: plan_id, type: uuid, required: true, description: Enterprise plan identifier, classification: confidential}
+      - {name: policy_decision_id, type: uuid, required: true, description: Governing policy decision, classification: confidential}
+      - {name: rollback_ref, type: string, required: true, description: Rollback strategy reference, classification: internal}
+    consumers: [DOM-PLT-RUN-001]
+    compatibility: backward
+    contains_personal_data: false
+    status: approved
+
+  - name: executive.plan_revised.v1
+    producer_domain: DOM-INT-EXE-001
+    description: A governed enterprise execution plan was revised.
+    delivery: at_least_once
+    retention: audit
+    schema_fields:
+      - {name: plan_id, type: uuid, required: true, description: Enterprise plan identifier, classification: confidential}
+      - {name: revision, type: integer, required: true, description: Monotonic plan revision, classification: internal}
+      - {name: reason, type: string, required: true, description: Revision rationale, classification: confidential}
+    consumers: [DOM-PLT-RUN-001]
+    compatibility: backward
+    contains_personal_data: false
+    status: approved
+
+  - name: governance.policy_decision_recorded.v1
+    producer_domain: DOM-GOV-PLY-001
+    description: A versioned policy evaluation decision was recorded.
+    delivery: at_least_once
+    retention: permanent
+    schema_fields:
+      - {name: policy_decision_id, type: uuid, required: true, description: Policy decision identifier, classification: confidential}
+      - {name: outcome, type: string, required: true, description: Allow deny or require approval outcome, classification: internal}
+      - {name: policy_versions, type: array, required: true, description: Exact evaluated policy versions, classification: internal}
+    consumers: [DOM-GOV-RSK-001, DOM-GOV-APR-001, DOM-PLT-RUN-001, DOM-PLT-INT-001]
+    compatibility: full
+    contains_personal_data: false
+    status: approved
+
+  - name: risk.assessment_completed.v1
+    producer_domain: DOM-GOV-RSK-001
+    description: An explainable risk assessment completed.
+    delivery: at_least_once
+    retention: permanent
+    schema_fields:
+      - {name: risk_assessment_id, type: uuid, required: true, description: Risk assessment identifier, classification: confidential}
+      - {name: risk_level, type: string, required: true, description: Assessed risk level, classification: internal}
+      - {name: explanation_ref, type: string, required: true, description: Explainability evidence reference, classification: confidential}
+    consumers: [DOM-GOV-APR-001]
+    compatibility: full
+    contains_personal_data: false
+    status: approved
+
+  - name: governance.budget_decision_recorded.v1
+    producer_domain: DOM-GOV-BUD-001
+    description: An atomic budget or exposure decision was recorded.
+    delivery: at_least_once
+    retention: permanent
+    schema_fields:
+      - {name: budget_decision_id, type: uuid, required: true, description: Budget decision identifier, classification: confidential}
+      - {name: outcome, type: string, required: true, description: Authorization outcome, classification: internal}
+      - {name: authorized_amount, type: money, required: true, description: Authorized financial amount, classification: confidential}
+    consumers: [DOM-COM-MKT-001, DOM-INT-EXE-001, DOM-PLT-RUN-001]
+    compatibility: full
+    contains_personal_data: false
+    status: approved
+
+  - name: audit.evidence_recorded.v1
+    producer_domain: DOM-GOV-AUD-001
+    description: Immutable correlated audit evidence was appended.
+    delivery: at_least_once
+    retention: permanent
+    schema_fields:
+      - {name: evidence_id, type: uuid, required: true, description: Audit evidence identifier, classification: restricted}
+      - {name: correlation_id, type: uuid, required: true, description: End-to-end correlation identifier, classification: internal}
+      - {name: evidence_type, type: string, required: true, description: Evidence classification, classification: internal}
+    consumers: []
+    compatibility: full
+    contains_personal_data: true
+    status: approved
+
+  - name: identity.authentication_recorded.v1
+    producer_domain: DOM-PLT-IDN-001
+    description: Authentication evidence was recorded for a human or workload identity.
+    delivery: at_least_once
+    retention: permanent
+    schema_fields:
+      - {name: authentication_id, type: uuid, required: true, description: Authentication evidence identifier, classification: restricted}
+      - {name: identity_id, type: string, required: true, description: Authenticated identity identifier, classification: restricted}
+      - {name: authenticated_at, type: timestamp, required: true, description: Authentication timestamp, classification: internal}
+    consumers: []
+    compatibility: full
+    contains_personal_data: true
+    status: approved
+
+  - name: runtime.execution_state_changed.v1
+    producer_domain: DOM-PLT-RUN-001
+    description: Durable execution entered a new lifecycle state.
+    delivery: at_least_once
+    retention: audit
+    schema_fields:
+      - {name: execution_id, type: uuid, required: true, description: Durable execution identifier, classification: internal}
+      - {name: previous_state, type: string, required: true, description: Previous execution state, classification: internal}
+      - {name: current_state, type: string, required: true, description: Current execution state, classification: internal}
+    consumers: [DOM-PLT-EVT-001, DOM-PLT-INT-001]
+    compatibility: backward
+    contains_personal_data: false
+    status: approved
+
+  - name: event.delivery_recorded.v1
+    producer_domain: DOM-PLT-EVT-001
+    description: Enterprise event delivery or replay activity was recorded.
+    delivery: at_least_once
+    retention: audit
+    schema_fields:
+      - {name: delivery_id, type: uuid, required: true, description: Delivery record identifier, classification: internal}
+      - {name: event_name, type: string, required: true, description: Delivered canonical event name, classification: internal}
+      - {name: outcome, type: string, required: true, description: Delivery outcome, classification: internal}
+    consumers: []
+    compatibility: backward
+    contains_personal_data: false
+    status: approved
+
+  - name: integration.operation_recorded.v1
+    producer_domain: DOM-PLT-INT-001
+    description: A governed provider operation and its normalized result were recorded.
+    delivery: at_least_once
+    retention: audit
+    schema_fields:
+      - {name: operation_id, type: uuid, required: true, description: Provider operation identifier, classification: confidential}
+      - {name: provider_type, type: string, required: true, description: Abstract provider category, classification: internal}
+      - {name: outcome, type: string, required: true, description: Normalized operation outcome, classification: internal}
+    consumers: [DOM-COM-SUP-001, DOM-COM-ORD-001, DOM-COM-FUL-001]
+    compatibility: backward
+    contains_personal_data: true
+    status: approved
+
+  - name: knowledge.evidence_recorded.v1
+    producer_domain: DOM-PLT-KNW-001
+    description: Governed knowledge evidence was ingested with provenance and freshness.
+    delivery: at_least_once
+    retention: audit
+    schema_fields:
+      - {name: evidence_id, type: uuid, required: true, description: Knowledge evidence identifier, classification: internal}
+      - {name: provenance_ref, type: string, required: true, description: Source provenance reference, classification: internal}
+      - {name: observed_at, type: timestamp, required: true, description: Evidence observation timestamp, classification: internal}
+    consumers: []
+    compatibility: backward
+    contains_personal_data: false
+    status: approved
