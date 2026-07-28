@@ -9,6 +9,7 @@ on:
       - 'config/execution/**'
       - 'config/governance/**'
       - 'config/platform/**'
+      - 'config/intelligence/**'
       - 'schemas/**'
       - 'docs/architecture/**'
       - 'scripts/**'
@@ -22,6 +23,7 @@ on:
       - 'config/execution/**'
       - 'config/governance/**'
       - 'config/platform/**'
+      - 'config/intelligence/**'
       - 'schemas/**'
       - 'docs/architecture/**'
       - 'scripts/**'
@@ -141,6 +143,25 @@ jobs:
           python -m pip install 'jsonschema[format]>=4.23,<5' 'PyYAML>=6.0,<7'
       - name: Validate platform services, resilience and security controls
         run: python scripts/validate_platform_registry.py
+
+  intelligence-architecture:
+    name: Intelligence architecture controls
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install validation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install 'jsonschema[format]>=4.23,<5' 'PyYAML>=6.0,<7'
+      - name: Validate agents, models, prompts, memory, knowledge and evaluation controls
+        run: python scripts/validate_intelligence_registry.py
 
   repository-compliance:
     name: Existing repository compliance suite
