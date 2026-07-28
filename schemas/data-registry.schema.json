@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://acos.local/schemas/data-registry.schema.json",
+  "title": "ACOS Enterprise Data Registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "architecture", "classifications", "data_products"],
+  "properties": {
+    "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "architecture": {"const": "enterprise-data"},
+    "classifications": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "description"],
+        "properties": {
+          "id": {"enum": ["public", "internal", "confidential", "restricted"]},
+          "description": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "data_products": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/dataProduct"}
+    }
+  },
+  "$defs": {
+    "qualityObjectives": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["completeness_percent", "validity_percent", "freshness_hours", "availability_percent"],
+      "properties": {
+        "completeness_percent": {"type": "number", "minimum": 0, "maximum": 100},
+        "validity_percent": {"type": "number", "minimum": 0, "maximum": 100},
+        "freshness_hours": {"type": "number", "exclusiveMinimum": 0},
+        "availability_percent": {"type": "number", "minimum": 0, "maximum": 100}
+      }
+    },
+    "retention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy", "period_days", "deletion_mode"],
+      "properties": {
+        "policy": {"type": "string", "minLength": 1},
+        "period_days": {"type": "integer", "minimum": 1},
+        "deletion_mode": {"enum": ["automatic", "governed", "cascading", "legal-hold"]}
+      }
+    },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sources", "transformations", "consumers"],
+      "properties": {
+        "sources": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "transformations": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "consumers": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "securityControls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["encryption_at_rest", "encryption_in_transit", "masking_required", "access_policy"],
+      "properties": {
+        "encryption_at_rest": {"type": "boolean"},
+        "encryption_in_transit": {"type": "boolean"},
+        "masking_required": {"type": "boolean"},
+        "access_policy": {"type": "string", "minLength": 1}
+      }
+    },
+    "recovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rpo_hours", "rto_hours", "backup_class"],
+      "properties": {
+        "rpo_hours": {"type": "number", "minimum": 0},
+        "rto_hours": {"type": "number", "minimum": 0},
+        "backup_class": {"type": "string", "minLength": 1}
+      }
+    },
+    "dataProduct": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "name", "domain", "purpose", "business_owner", "technical_owner", "data_steward",
+        "classification", "lifecycle_state", "authoritative_source", "storage_class", "contract_version",
+        "compatibility", "quality_objectives", "retention", "lineage", "security_controls", "recovery"
+      ],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+        "name": {"type": "string", "minLength": 1},
+        "domain": {"type": "string", "minLength": 1},
+        "purpose": {"type": "string", "minLength": 1},
+        "business_owner": {"type": "string", "minLength": 1},
+        "technical_owner": {"type": "string", "minLength": 1},
+        "data_steward": {"type": "string", "minLength": 1},
+        "classification": {"enum": ["public", "internal", "confidential", "restricted"]},
+        "lifecycle_state": {"enum": ["proposed", "active", "deprecated", "archived", "retired"]},
+        "authoritative_source": {"type": "string", "minLength": 1},
+        "storage_class": {"type": "string", "minLength": 1},
+        "contract_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+        "compatibility": {"enum": ["backward", "forward", "full", "none"]},
+        "quality_objectives": {"$ref": "#/$defs/qualityObjectives"},
+        "retention": {"$ref": "#/$defs/retention"},
+        "lineage": {"$ref": "#/$defs/lineage"},
+        "security_controls": {"$ref": "#/$defs/securityControls"},
+        "recovery": {"$ref": "#/$defs/recovery"}
+      }
+    }
+  }
+}
