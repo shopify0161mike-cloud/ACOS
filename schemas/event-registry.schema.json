@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://acos.internal/schemas/event-registry.schema.json",
+  "title": "ACOS Canonical Event Registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["registry_version", "architecture_chapter", "status", "events"],
+  "properties": {
+    "registry_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "architecture_chapter": {"const": "1.2"},
+    "status": {"enum": ["draft", "canonical", "deprecated"]},
+    "events": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/event"}
+    }
+  },
+  "$defs": {
+    "domainId": {"type": "string", "pattern": "^DOM-(COM|INT|GOV|PLT)-[A-Z]{3}-[0-9]{3}$"},
+    "eventName": {"type": "string", "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*\\.v[1-9][0-9]*$"},
+    "field": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type", "required", "description"],
+      "properties": {
+        "name": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+        "type": {"enum": ["string", "integer", "number", "boolean", "object", "array", "timestamp", "uuid", "money"]},
+        "required": {"type": "boolean"},
+        "description": {"type": "string", "minLength": 1},
+        "classification": {"enum": ["public", "internal", "confidential", "restricted"]}
+      }
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "producer_domain", "description", "delivery", "retention", "schema_fields", "consumers", "compatibility", "status"],
+      "properties": {
+        "name": {"$ref": "#/$defs/eventName"},
+        "producer_domain": {"$ref": "#/$defs/domainId"},
+        "description": {"type": "string", "minLength": 1},
+        "delivery": {"enum": ["at_least_once"]},
+        "retention": {"enum": ["operational", "audit", "permanent"]},
+        "schema_fields": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/field"}},
+        "consumers": {"type": "array", "items": {"$ref": "#/$defs/domainId"}, "uniqueItems": true},
+        "compatibility": {"enum": ["backward", "full"]},
+        "contains_personal_data": {"type": "boolean", "default": false},
+        "status": {"enum": ["draft", "approved", "deprecated"]}
+      }
+    }
+  }
+}
