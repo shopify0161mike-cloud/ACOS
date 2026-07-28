@@ -5,6 +5,7 @@ on:
     paths:
       - 'config/capabilities/**'
       - 'config/domains/**'
+      - 'config/events/**'
       - 'schemas/**'
       - 'docs/architecture/**'
       - 'scripts/**'
@@ -14,6 +15,7 @@ on:
     paths:
       - 'config/capabilities/**'
       - 'config/domains/**'
+      - 'config/events/**'
       - 'schemas/**'
       - 'docs/architecture/**'
       - 'scripts/**'
@@ -33,28 +35,22 @@ jobs:
     name: Capability architecture controls
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: pip
-
       - name: Install validation dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install 'jsonschema[format]>=4.23,<5' 'PyYAML>=6.0,<7'
-
       - name: Validate capability registry
         run: python scripts/validate_capability_registry.py
-
       - name: Validate capability dependency graph
         run: python scripts/validate_capability_dependencies.py
-
       - name: Validate canonical capability diagrams
         run: python scripts/validate_capability_diagrams.py
 
@@ -62,50 +58,41 @@ jobs:
     name: Domain architecture controls
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: pip
-
       - name: Install validation dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install 'jsonschema[format]>=4.23,<5' 'PyYAML>=6.0,<7'
-
       - name: Validate domain registry
         run: python scripts/validate_domain_registry.py
-
       - name: Validate domain references and ownership
         run: python scripts/validate_domain_references.py
-
       - name: Reject circular domain dependencies
         run: python scripts/validate_domain_dependencies.py
+      - name: Validate canonical event contracts
+        run: python scripts/validate_event_registry.py
 
   repository-compliance:
     name: Existing repository compliance suite
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
       - name: Install YAML dependency
         run: python -m pip install 'PyYAML>=6.0,<7'
-
       - name: Validate constitution
         run: python scripts/validate_constitution.py
-
       - name: Run compliance tests
         run: python -m unittest discover -s tests -p 'test_*.py'
