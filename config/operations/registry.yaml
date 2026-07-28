@@ -1,0 +1,115 @@
+version: 1.0.0
+service_tiers:
+  - id: tier-0-critical
+    name: Tier 0 Critical
+    support_model: 24x7
+    minimum_availability: 99.95
+    requires_continuity_plan: true
+    requires_on_call: true
+  - id: tier-1-essential
+    name: Tier 1 Essential
+    support_model: 24x7
+    minimum_availability: 99.9
+    requires_continuity_plan: true
+    requires_on_call: true
+  - id: tier-2-standard
+    name: Tier 2 Standard
+    support_model: business-hours
+    minimum_availability: 99.5
+    requires_continuity_plan: false
+    requires_on_call: false
+
+incident_severities:
+  - id: sev-1
+    name: Critical
+    acknowledgement_minutes: 5
+    escalation_minutes: 10
+    post_incident_review_required: true
+  - id: sev-2
+    name: Major
+    acknowledgement_minutes: 15
+    escalation_minutes: 30
+    post_incident_review_required: true
+  - id: sev-3
+    name: Moderate
+    acknowledgement_minutes: 60
+    escalation_minutes: 120
+    post_incident_review_required: false
+
+change_classes:
+  - id: standard
+    approval_required: false
+    retrospective_required: false
+  - id: normal
+    approval_required: true
+    retrospective_required: false
+  - id: emergency
+    approval_required: true
+    retrospective_required: true
+
+runbooks:
+  - id: rb-control-plane-recovery
+    name: Control Plane Recovery
+    owner: platform-operations
+    review_interval_days: 90
+    location: docs/runbooks/control-plane-recovery.md
+  - id: rb-event-backlog-recovery
+    name: Event Backlog Recovery
+    owner: platform-operations
+    review_interval_days: 90
+    location: docs/runbooks/event-backlog-recovery.md
+
+continuity_plans:
+  - id: bcp-control-plane
+    name: Control Plane Continuity
+    owner: platform-operations
+    rto_minutes: 60
+    rpo_minutes: 15
+    exercise_interval_days: 180
+    dependency_recovery_order:
+      - identity
+      - secrets
+      - messaging
+      - execution-runtime
+
+services:
+  - id: enterprise-control-plane
+    name: Enterprise Control Plane
+    owner: platform-operations
+    technical_owner: platform-engineering
+    environment: production
+    service_tier: tier-0-critical
+    runbooks:
+      - rb-control-plane-recovery
+    continuity_plan: bcp-control-plane
+    slos:
+      - id: control-plane-availability
+        sli: successful_governed_requests_ratio
+        objective_percent: 99.95
+        window_days: 30
+      - id: control-plane-latency
+        sli: governed_request_latency_p95
+        objective_percent: 99.0
+        window_days: 30
+  - id: canonical-event-backbone
+    name: Canonical Event Backbone
+    owner: platform-operations
+    technical_owner: platform-engineering
+    environment: production
+    service_tier: tier-1-essential
+    runbooks:
+      - rb-event-backlog-recovery
+    continuity_plan: bcp-control-plane
+    slos:
+      - id: event-delivery-reliability
+        sli: events_delivered_within_target_ratio
+        objective_percent: 99.9
+        window_days: 30
+
+operational_invariants:
+  - id: production-services-have-slos
+    statement: Every production service must define at least one SLO.
+  - id: critical-services-have-continuity
+    statement: Every Tier 0 service must reference a continuity plan.
+  - id: emergency-changes-reviewed
+    statement: Emergency changes require retrospective review.
