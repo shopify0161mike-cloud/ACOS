@@ -1,0 +1,57 @@
+flowchart LR
+  subgraph Sources[Authoritative Sources]
+    Business[Business Domains]
+    Platform[Platform Services]
+    Events[Canonical Events]
+    Knowledge[Approved Knowledge]
+  end
+
+  subgraph Control[Data Control Plane]
+    Catalog[Data Product Registry]
+    Contracts[Schema and Contracts]
+    Quality[Quality Objectives]
+    Lineage[Lineage and Metadata]
+    Policy[Classification and Retention]
+  end
+
+  subgraph DataPlanes[Governed Data Planes]
+    Operational[(Operational Stores)]
+    EventStore[(Event Store)]
+    Analytical[(Warehouse / Lakehouse)]
+    Vector[(Vector Store)]
+    Graph[(Knowledge Graph)]
+  end
+
+  subgraph Consumers[Governed Consumers]
+    Services[Domain Services]
+    Analytics[Analytics and Reporting]
+    Agents[Governed Agents]
+    Audit[Audit and Compliance]
+  end
+
+  Business --> Catalog
+  Platform --> Catalog
+  Events --> Contracts
+  Knowledge --> Policy
+
+  Catalog --> Contracts
+  Contracts --> Quality
+  Quality --> Lineage
+  Policy --> Lineage
+
+  Contracts --> Operational
+  Contracts --> EventStore
+  Contracts --> Analytical
+  Contracts --> Vector
+  Contracts --> Graph
+
+  Operational --> Services
+  EventStore --> Services
+  Analytical --> Analytics
+  Vector --> Agents
+  Graph --> Agents
+
+  Lineage --> Audit
+  Operational --> Audit
+  Analytical --> Audit
+  Vector --> Audit
