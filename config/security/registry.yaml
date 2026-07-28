@@ -1,0 +1,134 @@
+version: 1.0.0
+security_domains:
+  - id: identity-access
+    name: Identity and Access Management
+    owner: security-architecture
+    classification: restricted
+    status: active
+    controls:
+      - unique-identities
+      - strong-authentication
+      - least-privilege
+      - privileged-access-management
+      - periodic-access-review
+    evidence:
+      - identity-provider-logs
+      - access-review-records
+
+  - id: secrets-cryptography
+    name: Secrets and Cryptography
+    owner: platform-security
+    classification: restricted
+    status: active
+    controls:
+      - centralized-secret-storage
+      - key-rotation
+      - certificate-lifecycle
+      - encryption-at-rest
+      - encryption-in-transit
+    evidence:
+      - vault-audit-logs
+      - key-rotation-reports
+
+  - id: network-runtime
+    name: Network and Runtime Security
+    owner: platform-security
+    classification: confidential
+    status: active
+    controls:
+      - network-segmentation
+      - approved-ingress
+      - controlled-egress
+      - workload-identity
+      - runtime-monitoring
+    evidence:
+      - network-policy-reports
+      - runtime-alerts
+
+  - id: application-supply-chain
+    name: Application and Supply Chain Security
+    owner: product-security
+    classification: confidential
+    status: active
+    controls:
+      - source-protection
+      - dependency-scanning
+      - secret-scanning
+      - artifact-provenance
+      - artifact-signing
+      - deployment-approval
+    evidence:
+      - scan-results
+      - provenance-attestations
+      - release-approvals
+
+  - id: ai-agent-security
+    name: AI and Agent Security
+    owner: ai-governance
+    classification: restricted
+    status: active
+    controls:
+      - tool-allow-listing
+      - scoped-agent-permissions
+      - prompt-injection-defense
+      - memory-isolation
+      - model-audit-logging
+      - human-approval-for-high-impact-actions
+    evidence:
+      - agent-action-logs
+      - model-evaluation-results
+      - approval-records
+
+  - id: data-security
+    name: Data Security
+    owner: data-governance
+    classification: restricted
+    status: active
+    controls:
+      - classification-enforcement
+      - data-minimization
+      - masking-and-tokenization
+      - retention-enforcement
+      - secure-deletion
+      - immutable-audit
+    evidence:
+      - classification-reports
+      - retention-reports
+      - deletion-evidence
+
+  - id: detection-response
+    name: Detection and Response
+    owner: security-operations
+    classification: confidential
+    status: active
+    controls:
+      - centralized-security-logging
+      - alert-triage
+      - incident-response
+      - forensic-readiness
+      - post-incident-review
+    evidence:
+      - siem-alerts
+      - incident-records
+      - review-actions
+
+security_invariants:
+  - id: SEC-INV-001
+    statement: Every human, service, workload, and agent identity must be uniquely attributable.
+  - id: SEC-INV-002
+    statement: Restricted data must be encrypted in transit and at rest.
+  - id: SEC-INV-003
+    statement: Production privilege must be time-bound, approved, and auditable.
+  - id: SEC-INV-004
+    statement: Secrets must not be stored in source code, configuration committed to Git, or prompts.
+  - id: SEC-INV-005
+    statement: High-impact agent actions require explicit policy authorization and human approval where mandated.
+
+exceptions:
+  required_fields:
+    - owner
+    - rationale
+    - risk
+    - compensating_controls
+    - approved_by
+    - expires_at
