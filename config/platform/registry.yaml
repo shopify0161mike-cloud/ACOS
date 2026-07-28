@@ -1,0 +1,179 @@
+version: 1.0.0
+services:
+  - id: identity-broker
+    name: Identity Broker
+    category: identity
+    owner: platform-security
+    criticality: tier-0
+    status: active
+    environments: [development, test, staging, production]
+    capabilities:
+      - workload-identity
+      - token-exchange
+      - short-lived-credentials
+    data_classification: confidential
+    availability_slo: 99.95
+    rto_minutes: 30
+    rpo_minutes: 5
+    scaling_mode: horizontal
+    deployment_strategy: canary
+    dependencies: []
+    controls:
+      authentication: required
+      authorization: deny-by-default
+      encryption_in_transit: required
+      encryption_at_rest: required
+      audit_logging: required
+      secret_source: managed-vault
+    degradation_mode: fail-closed
+    backup_policy: daily-encrypted
+    recovery_test_frequency_days: 90
+
+  - id: policy-decision-service
+    name: Policy Decision Service
+    category: governance
+    owner: platform-security
+    criticality: tier-0
+    status: active
+    environments: [development, test, staging, production]
+    capabilities:
+      - authorization-decisions
+      - policy-evaluation
+      - obligation-resolution
+    data_classification: internal
+    availability_slo: 99.95
+    rto_minutes: 30
+    rpo_minutes: 5
+    scaling_mode: horizontal
+    deployment_strategy: canary
+    dependencies: [identity-broker]
+    controls:
+      authentication: required
+      authorization: deny-by-default
+      encryption_in_transit: required
+      encryption_at_rest: required
+      audit_logging: required
+      secret_source: managed-vault
+    degradation_mode: fail-closed
+    backup_policy: daily-encrypted
+    recovery_test_frequency_days: 90
+
+  - id: event-backbone
+    name: Event Backbone
+    category: messaging
+    owner: platform-runtime
+    criticality: tier-0
+    status: active
+    environments: [development, test, staging, production]
+    capabilities:
+      - event-delivery
+      - replay
+      - dead-letter-routing
+      - schema-enforcement
+    data_classification: confidential
+    availability_slo: 99.95
+    rto_minutes: 60
+    rpo_minutes: 5
+    scaling_mode: partitioned
+    deployment_strategy: rolling
+    dependencies: [identity-broker, policy-decision-service]
+    controls:
+      authentication: required
+      authorization: least-privilege
+      encryption_in_transit: required
+      encryption_at_rest: required
+      audit_logging: required
+      secret_source: managed-vault
+    degradation_mode: buffer-and-throttle
+    backup_policy: replicated-continuous
+    recovery_test_frequency_days: 90
+
+  - id: workflow-runtime
+    name: Durable Workflow Runtime
+    category: runtime
+    owner: platform-runtime
+    criticality: tier-0
+    status: active
+    environments: [development, test, staging, production]
+    capabilities:
+      - durable-execution
+      - timers
+      - retry-coordination
+      - compensation-orchestration
+    data_classification: confidential
+    availability_slo: 99.95
+    rto_minutes: 60
+    rpo_minutes: 5
+    scaling_mode: horizontal
+    deployment_strategy: canary
+    dependencies: [identity-broker, policy-decision-service, event-backbone]
+    controls:
+      authentication: required
+      authorization: least-privilege
+      encryption_in_transit: required
+      encryption_at_rest: required
+      audit_logging: required
+      secret_source: managed-vault
+    degradation_mode: pause-new-work-preserve-state
+    backup_policy: replicated-continuous
+    recovery_test_frequency_days: 90
+
+  - id: telemetry-platform
+    name: Telemetry Platform
+    category: observability
+    owner: platform-reliability
+    criticality: tier-1
+    status: active
+    environments: [development, test, staging, production]
+    capabilities:
+      - metrics
+      - logs
+      - traces
+      - alerting
+    data_classification: internal
+    availability_slo: 99.9
+    rto_minutes: 120
+    rpo_minutes: 15
+    scaling_mode: horizontal
+    deployment_strategy: rolling
+    dependencies: [identity-broker]
+    controls:
+      authentication: required
+      authorization: least-privilege
+      encryption_in_transit: required
+      encryption_at_rest: required
+      audit_logging: required
+      secret_source: managed-vault
+    degradation_mode: local-buffering
+    backup_policy: daily-encrypted
+    recovery_test_frequency_days: 180
+
+  - id: artifact-delivery
+    name: Artifact and Delivery Control Plane
+    category: delivery
+    owner: platform-engineering
+    criticality: tier-1
+    status: active
+    environments: [development, test, staging, production]
+    capabilities:
+      - artifact-provenance
+      - environment-promotion
+      - progressive-delivery
+      - rollback
+    data_classification: internal
+    availability_slo: 99.9
+    rto_minutes: 240
+    rpo_minutes: 60
+    scaling_mode: horizontal
+    deployment_strategy: blue-green
+    dependencies: [identity-broker, policy-decision-service, telemetry-platform]
+    controls:
+      authentication: required
+      authorization: separation-of-duties
+      encryption_in_transit: required
+      encryption_at_rest: required
+      audit_logging: required
+      secret_source: managed-vault
+    degradation_mode: block-production-promotion
+    backup_policy: daily-encrypted
+    recovery_test_frequency_days: 180
