@@ -1,0 +1,41 @@
+sequenceDiagram
+    autonumber
+    actor Caller
+    participant Gateway as Command Gateway
+    participant Identity as Identity Domain
+    participant Policy as Policy Domain
+    participant Risk as Risk Domain
+    participant Budget as Budget Governance
+    participant Approval as Approval Domain
+    participant Runtime as Durable Runtime
+    participant Domain as Owning Domain
+    participant Integration as Integration Domain
+    participant Events as Enterprise Events
+    participant Audit as Audit Domain
+
+    Caller->>Gateway: Submit versioned command
+    Gateway->>Identity: Authenticate actor or workload
+    Identity-->>Gateway: Identity evidence
+    Gateway->>Policy: Evaluate intent and scope
+    Policy-->>Gateway: Policy decision
+    Gateway->>Risk: Assess material risk
+    Risk-->>Gateway: Risk assessment
+    opt Financial or exposure impact
+        Gateway->>Budget: Authorize consumption
+        Budget-->>Gateway: Budget decision
+    end
+    opt Human-exclusive decision required
+        Gateway->>Approval: Request bound approval
+        Approval-->>Gateway: Authenticated decision
+    end
+    Gateway->>Runtime: Create durable execution
+    Runtime->>Domain: Dispatch idempotent domain command
+    Domain-->>Runtime: State transition and result
+    opt External side effect required
+        Runtime->>Integration: Execute governed provider operation
+        Integration-->>Runtime: Reconciled provider result
+    end
+    Domain->>Events: Publish canonical event through outbox
+    Runtime->>Audit: Append correlated execution evidence
+    Runtime-->>Gateway: Terminal or waiting status
+    Gateway-->>Caller: Accepted result and execution reference
